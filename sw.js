@@ -1,7 +1,7 @@
 /* Service Worker: يخلي الألعاب تشتغل بدون نت بعد أول زيارة.
    يجيب النسخة الجديدة من النت أول، ولو ما فيه نت يستخدم المحفوظ.
    لما تضيفين لعبة جديدة، ضيفي ملفاتها في FILES وغيّري رقم CACHE. */
-const CACHE = "mini-games-v1";
+const CACHE = "mini-games-v2";
 const FILES = [
   "./",
   "./index.html",
@@ -11,7 +11,9 @@ const FILES = [
   "./icons/icon-512.png",
   "./guess-word/",
   "./guess-word/index.html",
-  "./guess-word/words.js"
+  "./guess-word/words.js",
+  "./memory/",
+  "./memory/index.html"
 ];
 
 self.addEventListener("install", e => {

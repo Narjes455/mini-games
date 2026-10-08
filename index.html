@@ -19,7 +19,6 @@
     --line:rgba(251,239,217,.28);
     box-sizing:border-box;
     padding-top:env(safe-area-inset-top,0px);
-    padding-bottom:env(safe-area-inset-bottom,0px);
   }
   *,*::before,*::after{box-sizing:inherit}
   body{
@@ -33,7 +32,7 @@
       conic-gradient(from -45deg at 50% 100%,var(--cream) 90deg,transparent 0) 0 100%/14px 7px repeat-x,
       var(--green);
   }
-  .wrap{max-width:640px;margin:0 auto;padding:40px 20px 56px}
+  .wrap{max-width:640px;margin:0 auto;padding:40px 20px calc(env(safe-area-inset-bottom,0px) + 110px)}
   .title{display:flex;gap:6px;margin-bottom:14px}
   .title span{
     width:clamp(44px,13vw,64px);aspect-ratio:1;border-radius:8px;
@@ -56,7 +55,9 @@
   a.game{background:var(--maroon-deep)}
   a.game:hover{border-color:var(--cream)}
   a.game:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
-  .game .ico{font-size:2rem;width:48px;text-align:center;flex-shrink:0}
+  .game .ico{font-size:2rem;width:48px;display:grid;place-items:center;flex-shrink:0}
+  .mini{display:grid;grid-template-columns:repeat(2,20px);gap:4px}
+  .mini i{width:20px;height:20px;border-radius:5px;display:block}
   .game h2{margin:0 0 2px;font-size:1.15rem}
   .game p{margin:0;font-size:.9rem;opacity:.8;line-height:1.5}
   .game.soon{opacity:.55}
@@ -76,21 +77,20 @@
 
     <ul class="games">
       <li><a class="game" href="guess-word/">
-        <div class="ico">🔤</div>
+        <div class="ico"><span class="mini" aria-hidden="true"><i style="background:var(--green)"></i><i style="background:var(--saffron)"></i><i style="background:var(--mauve)"></i><i style="background:var(--green)"></i></span></div>
         <div><h2>خمّن الكلمة</h2><p>كلمة من ٥ حروف، عندك ٦ محاولات، وكل جولة كلمة جديدة.</p></div>
       </a></li>
+      <li><a class="game" href="memory/">
+        <div class="ico" aria-hidden="true">🌴</div>
+        <div><h2>لعبة الذاكرة</h2><p>اقلب الكروت وطابق الأزواج، لوحدك أو مع صديقك.</p></div>
+      </a></li>
       <li><div class="game soon">
-        <div class="ico">🕵️</div>
+        <div class="ico" aria-hidden="true">🕵️</div>
         <div><h2>خمّن شخصيتي</h2><p>لاعبين على جهازين، كل واحد يحاول يكشف شخصية الثاني.</p></div>
         <span class="tag">قريبًا</span>
       </div></li>
       <li><div class="game soon">
-        <div class="ico">🃏</div>
-        <div><h2>لعبة الذاكرة</h2><p>اقلب الكروت وطابق الأزواج بأقل عدد حركات.</p></div>
-        <span class="tag">قريبًا</span>
-      </div></li>
-      <li><div class="game soon">
-        <div class="ico">❌</div>
+        <div class="ico" aria-hidden="true">⭕</div>
         <div><h2>إكس أو</h2><p>العب مع صديقك على نفس الجهاز أو من جهازين.</p></div>
         <span class="tag">قريبًا</span>
       </div></li>
