@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5B1A2A">
+<meta name="description" content="لعبة الذاكرة — اقلب الكروت وطابق الأزواج بأقل عدد حركات، لوحدك أو مع صديقك.">
+<title>لعبة الذاكرة</title>
+<link rel="manifest" href="../manifest.json">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Reem+Kufi:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maroon:#5B1A2A; --maroon-deep:#43121F; --cream:#FBEFD9;
+    --green:#2F7D4F; --saffron:#E3A72F; --mauve:#7A5A63;
+    --line:rgba(251,239,217,.28);
+    --cols:4; --size:72px;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--maroon);color:var(--cream);
+    font-family:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+    display:flex;flex-direction:column;align-items:center;
+    -webkit-tap-highlight-color:transparent;overflow:hidden;
+  }
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  button:focus-visible,a:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+
+  .sadu{
+    width:100%;height:14px;flex-shrink:0;
+    background:
+      conic-gradient(from 135deg at 50% 0,var(--saffron) 90deg,transparent 0) 0 0/14px 7px repeat-x,
+      conic-gradient(from -45deg at 50% 100%,var(--cream) 90deg,transparent 0) 0 100%/14px 7px repeat-x,
+      var(--green);
+  }
+  header{
+    width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;
+    padding:10px 16px;
+  }
+  h1{font-family:"Reem Kufi",sans-serif;font-size:1.9rem;font-weight:700;margin:0;line-height:1}
+  .icon-btn{
+    width:40px;height:40px;border-radius:50%;background:transparent;border:1.5px solid var(--line);
+    display:grid;place-items:center;color:var(--cream);text-decoration:none;flex-shrink:0;
+  }
+
+  /* الإعدادات */
+  .controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 16px 8px}
+  .seg{display:flex;border:1.5px solid var(--line);border-radius:999px;padding:3px}
+  .seg button{
+    border:0;background:transparent;border-radius:999px;padding:6px 13px;font-size:.88rem;font-weight:600;
+  }
+  .seg button[aria-pressed="true"]{background:var(--cream);color:var(--maroon-deep)}
+
+  /* شريط الحالة */
+  .status{display:flex;gap:10px;justify-content:center;padding:4px 16px 10px;min-height:48px;align-items:center}
+  .pill{
+    display:flex;align-items:center;gap:8px;padding:6px 14px;border-radius:10px;
+    background:rgba(251,239,217,.1);font-weight:600;font-size:.95rem;
+    border:2px solid transparent;transition:border-color .2s,background .2s;
+  }
+  .pill b{font-size:1.15rem;font-variant-numeric:tabular-nums}
+  .pill.turn{border-color:var(--saffron);background:rgba(227,167,47,.18)}
+  .dot{width:10px;height:10px;border-radius:50%}
+
+  main{flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:0 16px 16px}
+  .grid{display:grid;grid-template-columns:repeat(var(--cols),var(--size));gap:8px}
+
+  /* الكروت */
+  .card{
+    width:var(--size);height:var(--size);border:0;padding:0;background:none;
+    perspective:700px;
+  }
+  .inner{
+    position:relative;width:100%;height:100%;transform-style:preserve-3d;
+    transition:transform .4s cubic-bezier(.3,.7,.4,1);
+  }
+  .card.open .inner,.card.done .inner{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    display:grid;place-items:center;
+  }
+  .back{
+    background:
+      conic-gradient(from 135deg at 50% 0,rgba(227,167,47,.55) 90deg,transparent 0) 0 0/12px 6px,
+      var(--maroon-deep);
+    border:2px solid var(--line);
+  }
+  .back::after{
+    content:"";width:34%;aspect-ratio:1;transform:rotate(45deg);
+    border:2px solid var(--saffron);background:var(--maroon-deep);
+  }
+  .front{
+    background:var(--cream);transform:rotateY(180deg);
+    font-size:calc(var(--size) * .5);line-height:1;
+  }
+  .card.done .front{background:var(--green);box-shadow:inset 0 0 0 3px var(--cream)}
+  .card.done.p2 .front{background:var(--saffron)}
+  .card.miss .inner{animation:shake .4s}
+  .card.done .inner{animation:pop .35s}
+
+  /* نافذة النتيجة */
+  .overlay{
+    position:fixed;inset:0;background:rgba(40,10,18,.72);display:none;
+    align-items:center;justify-content:center;padding:20px;z-index:20;
+  }
+  .overlay.open{display:flex}
+  .modal{
+    background:var(--maroon-deep);border:1.5px solid var(--line);border-radius:14px;
+    width:100%;max-width:360px;padding:26px 22px;text-align:center;
+  }
+  .modal h2{font-family:"Reem Kufi",sans-serif;font-size:1.8rem;margin:0 0 6px}
+  .modal p{margin:.35em 0;line-height:1.7;opacity:.9}
+  .result{display:flex;justify-content:center;gap:28px;margin:18px 0}
+  .result b{display:block;font-size:2rem;font-variant-numeric:tabular-nums}
+  .result span{font-size:.8rem;opacity:.8}
+  .best{font-size:.9rem;opacity:.85;margin-bottom:18px}
+  .best.new{color:var(--saffron);opacity:1;font-weight:700}
+  .btn{width:100%;border:0;border-radius:8px;padding:13px;font-size:1rem;font-weight:700;background:var(--green)}
+
+  @keyframes shake{20%,60%{transform:rotateY(180deg) translateX(-5px)}40%,80%{transform:rotateY(180deg) translateX(5px)}}
+  @keyframes pop{50%{transform:rotateY(180deg) scale(1.08)}100%{transform:rotateY(180deg)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+  <div class="sadu" aria-hidden="true"></div>
+  <header>
+    <a class="icon-btn" href="../" aria-label="كل الألعاب">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="7" height="7" rx="1.5"/><rect x="10" y="1" width="7" height="7" rx="1.5"/><rect x="1" y="10" width="7" height="7" rx="1.5"/><rect x="10" y="10" width="7" height="7" rx="1.5"/></svg>
+    </a>
+    <h1>لعبة الذاكرة</h1>
+    <button class="icon-btn" id="restart" aria-label="ابدأ من جديد">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    </button>
+  </header>
+
+  <div class="controls">
+    <div class="seg" id="levelSeg" role="group" aria-label="المستوى">
+      <button data-level="easy">سهل</button>
+      <button data-level="medium">متوسط</button>
+      <button data-level="hard">صعب</button>
+    </div>
+    <div class="seg" id="modeSeg" role="group" aria-label="عدد اللاعبين">
+      <button data-mode="1">لاعب</button>
+      <button data-mode="2">لاعبين</button>
+    </div>
+  </div>
+
+  <div class="status" id="status" aria-live="polite"></div>
+  <main><div class="grid" id="grid"></div></main>
+
+  <div class="overlay" id="winModal">
+    <div class="modal" role="dialog" aria-labelledby="winTitle">
+      <h2 id="winTitle"></h2>
+      <p id="winText"></p>
+      <div class="result" id="winResult"></div>
+      <div class="best" id="winBest"></div>
+      <button class="btn" id="again">العب مرة ثانية</button>
+    </div>
+  </div>
+
+<script>
+/* ===== الإعدادات ===== */
+const SYMBOLS = ["🌴","🐪","☕","🌙","⭐","🦅","🐎","🍯","⛺","🕌"];
+const LEVELS = {
+  easy:   {pairs:6,  cols:3, rows:4},
+  medium: {pairs:8,  cols:4, rows:4},
+  hard:   {pairs:10, cols:4, rows:5}
+};
+const COLORS = ["var(--green)","var(--saffron)"];
+
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch{ return d; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
+
+let level = store.get("memory-level","medium");
+let players = store.get("memory-mode",1);
+if(!LEVELS[level]) level = "medium";
+if(players !== 1 && players !== 2) players = 1;
+
+/* ===== الحالة ===== */
+let cards, first, second, lock, moves, matched, seconds, timer, turn, scores;
+const $ = id => document.getElementById(id);
+const grid = $("grid");
+
+function shuffle(a){
+  for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+const fmt = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+
+/* ===== حجم الكروت حسب الشاشة ===== */
+function fit(){
+  const {cols, rows} = LEVELS[level], gap = 8;
+  const top = grid.getBoundingClientRect().top || 220;
+  const availH = window.innerHeight - top - 24;
+  const availW = Math.min(window.innerWidth - 32, 480);
+  const size = Math.floor(Math.min((availW - gap*(cols-1)) / cols, (availH - gap*(rows-1)) / rows, 110));
+  document.documentElement.style.setProperty("--cols", cols);
+  document.documentElement.style.setProperty("--size", Math.max(size, 44) + "px");
+}
+
+/* ===== بدء لعبة ===== */
+function newGame(){
+  clearInterval(timer); timer = null;
+  const {pairs} = LEVELS[level];
+  const picks = shuffle([...SYMBOLS]).slice(0, pairs);
+  cards = shuffle([...picks, ...picks]);
+  first = second = null; lock = false;
+  moves = 0; matched = 0; seconds = 0; turn = 0; scores = [0,0];
+
+  grid.innerHTML = "";
+  cards.forEach((sym, i) => {
+    const b = document.createElement("button");
+    b.className = "card"; b.dataset.i = i;
+    b.setAttribute("aria-label", "كرت مقلوب");
+    b.innerHTML = `<div class="inner"><div class="face back"></div><div class="face front">${sym}</div></div>`;
+    b.addEventListener("click", () => flip(b));
+    grid.appendChild(b);
+  });
+  document.querySelectorAll("#levelSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.level === level));
+  document.querySelectorAll("#modeSeg button").forEach(b => b.setAttribute("aria-pressed", +b.dataset.mode === players));
+  $("winModal").classList.remove("open");
+  renderStatus();
+  requestAnimationFrame(fit);
+}
+
+/* ===== شريط الحالة ===== */
+function renderStatus(){
+  const s = $("status");
+  if(players === 1){
+    s.innerHTML = `<div class="pill">الحركات <b>${moves}</b></div><div class="pill">الوقت <b>${fmt(seconds)}</b></div>`;
+  }else{
+    s.innerHTML = [0,1].map(p =>
+      `<div class="pill ${turn===p ? "turn":""}"><span class="dot" style="background:${COLORS[p]}"></span>اللاعب ${p+1} <b>${scores[p]}</b></div>`
+    ).join("");
+  }
+}
+
+/* ===== قلب الكروت ===== */
+function flip(card){
+  if(lock || card === first || card.classList.contains("done")) return;
+  if(!timer && players === 1){
+    timer = setInterval(() => { seconds++; renderStatus(); }, 1000);
+  }
+  card.classList.add("open");
+  card.setAttribute("aria-label", cards[card.dataset.i]);
+  if(!first){ first = card; return; }
+  second = card; lock = true; moves++;
+  const same = cards[first.dataset.i] === cards[second.dataset.i];
+
+  if(same){
+    setTimeout(() => {
+      [first, second].forEach(c => { c.classList.add("done"); if(players === 2 && turn === 1) c.classList.add("p2"); });
+      matched++;
+      if(players === 2) scores[turn]++;      // اللي يطابق يكمل دوره
+      reset(); renderStatus();
+      if(matched === LEVELS[level].pairs) setTimeout(win, 500);
+    }, 350);
+  }else{
+    setTimeout(() => {
+      [first, second].forEach(c => c.classList.add("miss"));
+    }, 450);
+    setTimeout(() => {
+      [first, second].forEach(c => { c.classList.remove("open","miss"); c.setAttribute("aria-label","كرت مقلوب"); });
+      if(players === 2) turn = 1 - turn;     // الدور ينتقل للاعب الثاني
+      reset(); renderStatus();
+    }, 1000);
+  }
+  renderStatus();
+}
+function reset(){ first = second = null; lock = false; }
+
+/* ===== الفوز ===== */
+function win(){
+  clearInterval(timer); timer = null;
+  const best = $("winBest"); best.className = "best";
+  if(players === 1){
+    $("winTitle").textContent = "أحسنت! 🎉";
+    $("winText").textContent = "طابقت كل الأزواج.";
+    $("winResult").innerHTML = `<div><b>${moves}</b><span>حركة</span></div><div><b>${fmt(seconds)}</b><span>الوقت</span></div>`;
+    const key = "memory-best-" + level, rec = store.get(key, null);
+    const better = !rec || moves < rec.moves || (moves === rec.moves && seconds < rec.seconds);
+    if(better){
+      store.set(key, {moves, seconds});
+      best.textContent = rec ? "رقم قياسي جديد! 🏆" : "هذا أول رقم قياسي لك في هالمستوى";
+      if(rec) best.classList.add("new");
+    }else{
+      best.textContent = `أفضل نتيجة لك: ${rec.moves} حركة في ${fmt(rec.seconds)}`;
+    }
+  }else{
+    const [a, b] = scores;
+    $("winTitle").textContent = a === b ? "تعادل! 🤝" : `فاز اللاعب ${a > b ? 1 : 2} 🎉`;
+    $("winText").textContent = a === b ? "ما فيه فايز هالمرة، عيدوها!" : "مبروك، ذاكرة قوية!";
+    $("winResult").innerHTML = `<div><b>${a}</b><span>اللاعب 1</span></div><div><b>${b}</b><span>اللاعب 2</span></div>`;
+    best.textContent = "";
+  }
+  $("winModal").classList.add("open");
+  $("again").focus();
+}
+
+/* ===== الأزرار ===== */
+document.querySelectorAll("#levelSeg button").forEach(b => b.addEventListener("click", () => {
+  level = b.dataset.level; store.set("memory-level", level); newGame();
+}));
+document.querySelectorAll("#modeSeg button").forEach(b => b.addEventListener("click", () => {
+  players = +b.dataset.mode; store.set("memory-mode", players); newGame();
+}));
+$("restart").addEventListener("click", newGame);
+$("again").addEventListener("click", newGame);
+$("winModal").addEventListener("click", e => { if(e.target.id === "winModal") $("winModal").classList.remove("open"); });
+window.addEventListener("resize", fit);
+
+newGame();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(()=>{});
+</script>
+</body>
+</html>
