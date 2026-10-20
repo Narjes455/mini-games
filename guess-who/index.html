@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5B1A2A">
+<meta name="description" content="خمّن شخصيتي — اختر شخصية سرية واسأل أسئلة لتكشف شخصية خصمك أول. ضد الكمبيوتر أو مع صديق من جهاز ثاني.">
+<title>خمّن شخصيتي</title>
+<link rel="manifest" href="../manifest.json">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Reem+Kufi:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maroon:#5B1A2A; --maroon-deep:#43121F; --cream:#FBEFD9;
+    --green:#2F7D4F; --saffron:#E3A72F; --mauve:#7A5A63; --red:#C0392B;
+    --line:rgba(251,239,217,.28);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html,body{margin:0}
+  body{
+    min-height:100vh;background:var(--maroon);color:var(--cream);
+    font-family:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  button:disabled{cursor:default}
+  button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+  [hidden]{display:none!important}
+
+  .sadu{
+    height:14px;
+    background:
+      conic-gradient(from 135deg at 50% 0,var(--saffron) 90deg,transparent 0) 0 0/14px 7px repeat-x,
+      conic-gradient(from -45deg at 50% 100%,var(--cream) 90deg,transparent 0) 0 100%/14px 7px repeat-x,
+      var(--green);
+  }
+  header{
+    max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;
+    padding:10px 16px;
+  }
+  h1{font-family:"Reem Kufi",sans-serif;font-size:1.9rem;font-weight:700;margin:0;line-height:1}
+  .icon-btn{
+    width:40px;height:40px;border-radius:50%;background:transparent;border:1.5px solid var(--line);
+    display:grid;place-items:center;color:var(--cream);text-decoration:none;font-size:1.15rem;font-weight:700;flex-shrink:0;
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 16px 24px}
+
+  /* ===== الشاشة الرئيسية ===== */
+  .intro{text-align:center;padding:8px 0 4px}
+  .faces{display:flex;justify-content:center;gap:8px;margin:6px 0 18px}
+  .faces .card{width:72px;cursor:default}
+  .faces .card:nth-child(2){transform:translateY(-8px)}
+  .lead{line-height:1.8;opacity:.88;margin:0 auto 22px;max-width:30em}
+  .choices{display:grid;gap:10px;max-width:400px;margin:0 auto}
+  .big{
+    display:flex;align-items:center;gap:14px;text-align:start;width:100%;
+    border:1.5px solid var(--line);background:var(--maroon-deep);border-radius:12px;padding:14px 16px;
+  }
+  .big:hover{border-color:var(--cream)}
+  .big .e{font-size:1.8rem}
+  .big b{display:block;font-size:1.05rem}
+  .big span{font-size:.85rem;opacity:.8}
+  .join{display:flex;gap:8px;margin-top:4px}
+  .join input{
+    flex:1;min-width:0;border:1.5px solid var(--line);background:transparent;color:var(--cream);
+    border-radius:10px;padding:12px;font:inherit;font-size:1.05rem;text-align:center;letter-spacing:.2em;
+  }
+  .join input::placeholder{letter-spacing:0;opacity:.6}
+  .btn{border:0;border-radius:10px;padding:12px 18px;font-size:1rem;font-weight:700;background:var(--green)}
+  .btn.alt{background:transparent;border:1.5px solid var(--line)}
+  .btn.warn{background:var(--saffron);color:var(--maroon-deep)}
+  .btn:disabled{opacity:.45}
+  .err{color:#ffb4a8;text-align:center;min-height:1.6em;margin:8px 0 0;font-size:.92rem}
+
+  /* ===== الغرفة ===== */
+  .lobby{text-align:center;padding-top:10px}
+  .code{
+    display:inline-flex;gap:6px;margin:6px 0 14px;direction:ltr;
+  }
+  .code span{
+    width:46px;height:56px;border-radius:8px;background:var(--cream);color:var(--maroon-deep);
+    display:grid;place-items:center;font-size:1.8rem;font-weight:700;font-family:"IBM Plex Sans Arabic",monospace;
+  }
+  .qr{background:#fff;padding:10px;border-radius:10px;display:inline-block;margin-bottom:12px}
+  .qr img,.qr canvas{display:block;width:150px;height:150px}
+  .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .wait{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;opacity:.9}
+  .spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--saffron);animation:spin 1s linear infinite}
+
+  /* ===== شاشة اللعب ===== */
+  .bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .mine{
+    display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:10px;
+    background:rgba(251,239,217,.1);min-width:0;
+  }
+  .mine .mini{width:38px;border-radius:6px;background:var(--cream);overflow:hidden;flex-shrink:0}
+  .mine small{display:block;font-size:.72rem;opacity:.75}
+  .mine b{font-size:.95rem;white-space:nowrap}
+  .score{margin-inline-start:auto;display:flex;gap:6px;font-size:.85rem;font-weight:600}
+  .score > span{background:rgba(251,239,217,.1);border-radius:8px;padding:5px 9px;white-space:nowrap}
+  .score b{font-variant-numeric:tabular-nums}
+
+  .turn{
+    text-align:center;font-weight:700;border-radius:10px;padding:9px 12px;margin-bottom:10px;
+    background:rgba(251,239,217,.08);border:2px solid transparent;
+  }
+  .turn.me{border-color:var(--saffron);background:rgba(227,167,47,.16)}
+  .turn small{display:block;font-weight:400;opacity:.8;font-size:.8rem}
+
+  .board{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  .card{
+    border:0;padding:0;background:none;perspective:600px;display:block;width:100%;
+    aspect-ratio:100/134;
+  }
+  .card .inner{
+    position:relative;width:100%;height:100%;transform-style:preserve-3d;
+    transition:transform .38s cubic-bezier(.3,.7,.4,1);
+  }
+  .card.down .inner{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;
+  }
+  .front{background:var(--cream);color:var(--maroon-deep);display:flex;flex-direction:column}
+  .front svg{width:100%;flex:1;min-height:0;display:block}
+  .front .nm{font-size:clamp(.62rem,2.6vw,.85rem);font-weight:700;text-align:center;padding:1px 2px 3px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .back{
+    transform:rotateY(180deg);border:2px solid var(--line);
+    background:
+      conic-gradient(from 135deg at 50% 0,rgba(227,167,47,.45) 90deg,transparent 0) 0 0/12px 6px,
+      var(--maroon-deep);
+  }
+  .card.sel .front{box-shadow:inset 0 0 0 4px var(--saffron)}
+  .board.picking .card:not(.sel) .front{opacity:.92}
+  .board.guessing .card:not(.down) .front{box-shadow:inset 0 0 0 3px var(--saffron);animation:glow 1.2s ease-in-out infinite alternate}
+  .board.guessing .card.down{opacity:.5}
+
+  .panel{margin-top:12px}
+  .qs{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+  .q{
+    border:1.5px solid var(--line);background:transparent;border-radius:999px;
+    padding:5px 10px;font-size:.82rem;font-weight:600;
+  }
+  .q:not(:disabled):hover{border-color:var(--cream);background:rgba(251,239,217,.08)}
+  .q:disabled{opacity:.4}
+  .q.asked{border-style:dashed}
+  .actions{display:flex;gap:8px;margin-top:12px}
+  .actions .btn{flex:1}
+  .log{list-style:none;margin:12px 0 0;padding:0;font-size:.88rem;display:grid;gap:4px}
+  .log li{display:flex;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:8px;background:rgba(251,239,217,.06)}
+  .log li b.y{color:#8fe0ad}
+  .log li b.n{color:#ffb4a8}
+  .log li:first-child{background:rgba(251,239,217,.13)}
+
+  /* فقاعة الجواب */
+  .bubble{
+    position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);opacity:0;
+    background:var(--cream);color:var(--maroon-deep);border-radius:16px;padding:16px 26px;text-align:center;
+    pointer-events:none;z-index:40;transition:transform .25s,opacity .25s;box-shadow:0 10px 40px rgba(0,0,0,.35);
+  }
+  .bubble.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .bubble small{display:block;font-size:.85rem;opacity:.75}
+  .bubble b{display:block;font-family:"Reem Kufi",sans-serif;font-size:2.2rem;line-height:1.3}
+  .bubble.y b{color:var(--green)} .bubble.n b{color:var(--red)}
+
+  .toast{
+    position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:50%;transform:translateX(-50%);
+    background:var(--cream);color:var(--maroon-deep);padding:10px 18px;border-radius:8px;font-weight:700;
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:calc(100vw - 32px);text-align:center;
+  }
+  .toast.show{opacity:1}
+
+  /* النوافذ */
+  .overlay{position:fixed;inset:0;background:rgba(40,10,18,.75);display:none;align-items:center;justify-content:center;padding:20px;z-index:30}
+  .overlay.open{display:flex}
+  .modal{
+    background:var(--maroon-deep);border:1.5px solid var(--line);border-radius:14px;
+    width:100%;max-width:380px;max-height:88vh;overflow:auto;padding:22px 20px;position:relative;text-align:center;
+  }
+  .modal h2{font-family:"Reem Kufi",sans-serif;font-size:1.7rem;margin:0 0 8px}
+  .modal p{margin:.4em 0;line-height:1.75}
+  .modal.rules{text-align:start}
+  .modal.rules ol{padding-inline-start:1.2em;margin:.4em 0;line-height:1.8}
+  .close{position:absolute;top:12px;left:12px;background:none;border:0;font-size:1.5rem;line-height:1}
+  .reveal{display:flex;justify-content:center;gap:18px;margin:16px 0}
+  .reveal div{width:96px}
+  .reveal .card{cursor:default}
+  .reveal small{display:block;margin-top:6px;font-size:.8rem;opacity:.8}
+  .modal .actions{margin-top:16px}
+  .pickc{width:110px;margin:10px auto}
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes glow{to{box-shadow:inset 0 0 0 3px rgba(227,167,47,.35)}}
+  @media (min-width:600px){ .board{gap:8px} }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+  <!-- نقشة الشماغ (تستخدمها الرسومات) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <pattern id="shm" width="6" height="6" patternUnits="userSpaceOnUse">
+        <rect width="6" height="6" fill="#fff"/><rect width="3" height="3" fill="#c0262d"/><rect x="3" y="3" width="3" height="3" fill="#c0262d"/>
+      </pattern>
+    </defs>
+  </svg>
+
+  <div class="sadu" aria-hidden="true"></div>
+  <header>
+    <a class="icon-btn" href="../" aria-label="كل الألعاب">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="7" height="7" rx="1.5"/><rect x="10" y="1" width="7" height="7" rx="1.5"/><rect x="1" y="10" width="7" height="7" rx="1.5"/><rect x="10" y="10" width="7" height="7" rx="1.5"/></svg>
+    </a>
+    <h1>خمّن شخصيتي</h1>
+    <button class="icon-btn" id="rulesBtn" aria-label="طريقة اللعب">؟</button>
+  </header>
+
+  <!-- ===== الشاشة الرئيسية ===== -->
+  <section class="wrap" id="home">
+    <div class="intro">
+      <div class="faces" id="faces"></div>
+      <p class="lead">كل لاعب يختار شخصية سرية، وبعدها تتبادلون الأسئلة: نظارة؟ شماغ؟ مبتسم؟ اقلب الشخصيات اللي ما تنطبق، وأول واحد يخمّن شخصية الثاني يفوز.</p>
+    </div>
+    <div class="choices">
+      <button class="big" id="cpuBtn"><span class="e">🤖</span><span><b>العب ضد الكمبيوتر</b><span>تقدر تلعب لوحدك وبدون نت</span></span></button>
+      <button class="big" id="hostBtn"><span class="e">👥</span><span><b>العب مع صديق</b><span>افتح غرفة وأرسل الرابط لصديقك يفتحه من جواله</span></span></button>
+      <div class="join">
+        <input id="codeInput" inputmode="numeric" maxlength="4" placeholder="عندك رمز غرفة؟" aria-label="رمز الغرفة" autocomplete="off">
+        <button class="btn" id="joinBtn">ادخل</button>
+      </div>
+      <p class="err" id="homeErr" role="alert"></p>
+    </div>
+  </section>
+
+  <!-- ===== الغرفة ===== -->
+  <section class="wrap lobby" id="lobby" hidden>
+    <div id="lobbyInvite" hidden>
+      <p>أرسل لصديقك الرابط، أو خلّه يكتب الرمز:</p>
+      <div class="code" id="codeBox"></div>
+      <div><div class="qr" id="qr"></div></div>
+      <div class="row">
+        <button class="btn" id="shareBtn">أرسل الرابط</button>
+        <button class="btn alt" id="copyBtn">انسخ الرابط</button>
+      </div>
+    </div>
+    <div class="wait"><span class="spin" aria-hidden="true"></span><span id="lobbyMsg">جاري تجهيز الغرفة…</span></div>
+    <p class="err" id="lobbyErr" role="alert"></p>
+    <button class="btn alt" id="cancelBtn">رجوع</button>
+  </section>
+
+  <!-- ===== اللعب ===== -->
+  <section class="wrap" id="game" hidden>
+    <div class="bar">
+      <div class="mine" id="mine" hidden>
+        <div class="mini" id="mineFace"></div>
+        <div><small>شخصيتك</small><b id="mineName"></b></div>
+      </div>
+      <div class="score" aria-label="النتيجة">
+        <span>أنت <b id="sMe">0</b></span>
+        <span><span id="oppLabel">صديقك</span> <b id="sOpp">0</b></span>
+      </div>
+    </div>
+    <div class="turn" id="turn" aria-live="polite"></div>
+    <div class="board" id="board"></div>
+
+    <div class="panel" id="pickPanel">
+      <div class="actions">
+        <button class="btn" id="confirmPick" disabled>هذي شخصيتي</button>
+        <button class="btn alt" id="randomPick">اختيار عشوائي</button>
+      </div>
+    </div>
+
+    <div class="panel" id="playPanel" hidden>
+      <div class="qs" id="qs"></div>
+      <div class="actions">
+        <button class="btn warn" id="guessBtn">🎯 خمّن الشخصية</button>
+      </div>
+      <ul class="log" id="log"></ul>
+    </div>
+
+    <div class="panel" id="guessPanel" hidden>
+      <div class="actions"><button class="btn alt" id="cancelGuess">إلغاء التخمين</button></div>
+    </div>
+  </section>
+
+  <div class="bubble" id="bubble" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- طريقة اللعب -->
+  <div class="overlay" id="rulesModal">
+    <div class="modal rules" role="dialog" aria-labelledby="rulesTitle">
+      <button class="close" data-close aria-label="إغلاق">×</button>
+      <h2 id="rulesTitle">طريقة اللعب</h2>
+      <ol>
+        <li>كل لاعب يختار شخصية سرية من الـ ٢٤ شخصية.</li>
+        <li>في دورك اختر سؤال واحد، والجواب يجي نعم أو لا حسب شخصية خصمك.</li>
+        <li>اضغط على الشخصيات اللي ما تنطبق عشان تنقلب. تقدر ترجعها بضغطة ثانية.</li>
+        <li>لما تعرف الشخصية، اضغط «خمّن الشخصية» في دورك واختارها.</li>
+        <li>التخمين الصح يفوّزك، والغلط يخسّرك، فلا تستعجل!</li>
+      </ol>
+      <p>في اللعب مع صديق، كل واحد يفتح اللعبة من جواله، والأجوبة تنحسب تلقائيًا من شخصية كل لاعب.</p>
+    </div>
+  </div>
+
+  <!-- تأكيد التخمين -->
+  <div class="overlay" id="guessModal">
+    <div class="modal" role="dialog" aria-labelledby="guessTitle">
+      <h2 id="guessTitle">متأكد؟</h2>
+      <div class="pickc" id="guessFace"></div>
+      <p id="guessText"></p>
+      <div class="actions">
+        <button class="btn warn" id="doGuess">إيه، خمّن</button>
+        <button class="btn alt" data-close>لا، رجوع</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نهاية الجولة -->
+  <div class="overlay" id="endModal">
+    <div class="modal" role="dialog" aria-labelledby="endTitle">
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div class="reveal" id="reveal"></div>
+      <div class="actions">
+        <button class="btn" id="againBtn">جولة جديدة</button>
+        <button class="btn alt" id="homeBtn">القائمة</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ======================================================
+   الشخصيات — كلها مرسومة بالكود (SVG)
+   ====================================================== */
+const SKIN  = ["#f1c9a5", "#d9a074", "#a86b45"];
+const HAIR  = {black:"#2b1d16", brown:"#6b4226", blond:"#d9a441", grey:"#c9c4bd"};
+const CLOTH = {white:"#f7f6f2", green:"#2F7D4F", blue:"#3a6ea5", red:"#b8323c"};
+
+// الاسم، الجنس، غطاء الراس، لون الشعر، نظارة، لحية، شنب، كبير بالسن، مبتسم، لون الملابس، البشرة
+const RAW = [
+  ["فهد",    "m","shemagh","black",0,1,1,0,1,"white",1],
+  ["سلطان",  "m","shemagh","grey", 1,1,1,1,0,"white",0],
+  ["خالد",   "m","shemagh","black",0,0,1,0,0,"white",2],
+  ["ماجد",   "m","shemagh","black",1,0,0,0,1,"green",1],
+  ["عبدالله","m","ghutra", "black",0,1,1,0,1,"white",0],
+  ["تركي",   "m","ghutra", "brown",1,0,1,0,0,"blue", 2],
+  ["سعود",   "m","ghutra", "grey", 0,1,1,1,1,"white",1],
+  ["ناصر",   "m","cap",    "black",0,0,0,0,1,"green",2],
+  ["يوسف",   "m","cap",    "brown",1,1,1,0,0,"blue", 0],
+  ["بدر",    "m","none",   "black",0,0,0,0,1,"red",  1],
+  ["حمد",    "m","none",   "grey", 1,1,1,1,1,"blue", 2],
+  ["راشد",   "m","none",   "brown",0,0,1,0,0,"green",0],
+  ["نورة",   "f","hijab",  "black",1,0,0,0,1,"red",  1],
+  ["سارة",   "f","hijab",  "black",0,0,0,0,0,"green",0],
+  ["هيفاء",  "f","hijab",  "grey", 1,0,0,1,1,"blue", 2],
+  ["ريم",    "f","hijab",  "black",0,0,0,0,1,"red",  1],
+  ["لمى",    "f","hijab",  "black",0,0,0,0,0,"blue", 2],
+  ["دانة",   "f","hijab",  "black",1,0,0,0,1,"green",0],
+  ["جود",    "f","none",   "black",0,0,0,0,1,"red",  0],
+  ["مها",    "f","none",   "brown",1,0,0,0,0,"blue", 1],
+  ["العنود", "f","none",   "blond",0,0,0,0,1,"green",0],
+  ["شهد",    "f","none",   "black",0,0,0,0,0,"white",2],
+  ["أمل",    "f","none",   "grey", 1,0,0,1,1,"red",  1],
+  ["هند",    "f","none",   "brown",0,0,0,0,1,"green",2],
+];
+const CHARS = RAW.map((r, id) => ({
+  id, name:r[0], g:r[1], head:r[2], hair:r[3], glasses:!!r[4], beard:!!r[5],
+  mustache:!!r[6], old:!!r[7], smile:!!r[8], cloth:r[9], skin:r[10]
+}));
+const hairShown = c => c.head === "none" || c.head === "cap";
+
+const QUESTIONS = [
+  {id:"man",      label:"رجل؟",          f:c => c.g === "m"},
+  {id:"glasses",  label:"👓 نظارة؟",      f:c => c.glasses},
+  {id:"beard",    label:"لحية؟",         f:c => c.beard},
+  {id:"mustache", label:"شنب؟",          f:c => c.mustache},
+  {id:"smile",    label:"😊 مبتسم؟",      f:c => c.smile},
+  {id:"old",      label:"كبير بالسن؟",    f:c => c.old},
+  {id:"shemagh",  label:"شماغ أحمر؟",     f:c => c.head === "shemagh"},
+  {id:"ghutra",   label:"غترة بيضاء؟",    f:c => c.head === "ghutra"},
+  {id:"cap",      label:"🧢 كاب؟",        f:c => c.head === "cap"},
+  {id:"hijab",    label:"حجاب؟",         f:c => c.head === "hijab"},
+  {id:"hair",     label:"شعره ظاهر؟",     f:c => hairShown(c)},
+  {id:"black",    label:"شعر أسود؟",      f:c => hairShown(c) && c.hair === "black"},
+  {id:"brown",    label:"شعر بني؟",       f:c => hairShown(c) && c.hair === "brown"},
+  {id:"blond",    label:"شعر أشقر؟",      f:c => hairShown(c) && c.hair === "blond"},
+  {id:"c_white",  label:"⚪ ملابس بيضاء؟", f:c => c.cloth === "white"},
+  {id:"c_green",  label:"🟢 ملابس خضراء؟", f:c => c.cloth === "green"},
+  {id:"c_blue",   label:"🔵 ملابس زرقاء؟", f:c => c.cloth === "blue"},
+  {id:"c_red",    label:"🔴 ملابس حمراء؟", f:c => c.cloth === "red"},
+];
+const Q = Object.fromEntries(QUESTIONS.map(q => [q.id, q]));
+
+function avatar(c){
+  const skin = SKIN[c.skin], hair = HAIR[c.hair], cloth = CLOTH[c.cloth];
+  const ST = 'stroke="rgba(40,10,18,.18)" stroke-width="1"';
+  const scarf = c.head === "shemagh" ? "url(#shm)" : "#fbfaf6";
+  const capCol = c.cloth === "white" ? "#43121F" : cloth;
+  let s = '<svg viewBox="0 0 100 112" aria-hidden="true">';
+
+  // الطبقات الخلفية
+  if(c.head === "hijab") s += `<path d="M18 60 Q16 14 50 12 Q84 14 82 60 Q84 92 50 100 Q16 92 18 60Z" fill="${cloth}" ${ST}/>`;
+  if(c.head === "shemagh" || c.head === "ghutra") s += `<path d="M24 38 Q50 6 76 38 L88 104 L64 92 L50 74 L36 92 L12 104Z" fill="${scarf}" ${ST}/>`;
+  if(c.head === "none" && c.g === "f") s += `<path d="M24 50 Q20 16 50 16 Q80 16 76 50 L80 94 Q66 98 62 84 L38 84 Q34 98 20 94Z" fill="${hair}"/>`;
+
+  // الملابس والرقبة
+  if(c.head !== "hijab") s += `<rect x="42" y="64" width="16" height="20" rx="5" fill="${skin}"/>`;
+  s += `<path d="M8 112 Q10 84 50 80 Q90 84 92 112Z" fill="${cloth}" ${ST}/>`;
+  if(c.g === "m" && c.head !== "shemagh" && c.head !== "ghutra") s += `<path d="M43 81 L50 90 L57 81" fill="none" stroke="rgba(40,10,18,.25)" stroke-width="1.5"/>`;
+
+  // الأذن والوجه
+  if(hairShown(c)) s += `<ellipse cx="30" cy="54" rx="4" ry="6" fill="${skin}"/><ellipse cx="70" cy="54" rx="4" ry="6" fill="${skin}"/>`;
+  s += `<ellipse cx="50" cy="52" rx="${c.head === "hijab" ? 18 : 20}" ry="23" fill="${skin}"/>`;
+
+  // الشعر وغطاء الراس من قدام
+  if(c.head === "none"){
+    s += c.g === "m"
+      ? `<path d="M29 46 Q28 24 50 24 Q72 24 71 46 Q66 34 50 34 Q34 34 29 46Z" fill="${hair}"/>`
+      : `<path d="M28 50 Q27 22 50 22 Q73 22 72 50 Q64 32 52 34 Q40 34 28 50Z" fill="${hair}"/>`;
+  }
+  if(c.head === "cap"){
+    s += `<path d="M30 52 L30 42 L35 42 L35 50Z M70 52 L70 42 L65 42 L65 50Z" fill="${hair}"/>`;
+    s += `<path d="M28 43 Q28 18 50 18 Q72 18 72 43Z" fill="${capCol}" ${ST}/>`;
+    s += `<path d="M26 43 Q50 37 74 43 Q77 48 70 47 Q50 43 30 47 Q23 48 26 43Z" fill="${capCol}" stroke="rgba(0,0,0,.3)" stroke-width="1"/>`;
+  }
+  if(c.head === "shemagh" || c.head === "ghutra"){
+    s += `<path d="M27 46 Q28 22 50 20 Q72 22 73 46 Q62 34 50 34 Q38 34 27 46Z" fill="${scarf}" ${ST}/>`;
+    s += `<path d="M28 33 Q50 21 72 33 M29 39 Q50 27 71 39" fill="none" stroke="#1d1414" stroke-width="3.2" stroke-linecap="round"/>`;
+  }
+  if(c.head === "hijab"){
+    s += `<path d="M30 42 Q31 24 50 24 Q69 24 70 42 Q62 32 50 32 Q38 32 30 42Z" fill="${cloth}"/>`;
+    s += `<path d="M32 66 Q50 86 68 66 L74 82 Q50 100 26 82Z" fill="${cloth}"/>`;
+  }
+
+  // الملامح
+  const brow = hairShown(c) ? hair : (c.old ? HAIR.grey : "#2b1d16");
+  s += `<path d="M38 45 Q42 42.5 46 45 M54 45 Q58 42.5 62 45" stroke="${brow}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  s += `<circle cx="42" cy="50" r="2.4" fill="#24160f"/><circle cx="58" cy="50" r="2.4" fill="#24160f"/>`;
+  s += `<path d="M50 52 Q47.5 58.5 51 59" stroke="rgba(60,30,20,.45)" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
+  if(c.old) s += `<path d="M36 55.5 Q39 57.5 42 56.5 M58 56.5 Q61 57.5 64 55.5 M44 38 Q50 36.5 56 38" stroke="rgba(60,30,20,.3)" stroke-width="1" fill="none"/>`;
+  if(c.beard) s += `<path d="M30 54 Q31 81 50 81 Q69 81 70 54 Q67 70 59 71 Q50 67 41 71 Q33 70 30 54Z" fill="${hair}"/>`;
+  if(c.mustache) s += `<path d="M42 63 Q50 58.5 58 63 Q50 61.5 42 63Z" fill="${hair}" stroke="${hair}" stroke-width="2" stroke-linejoin="round"/>`;
+  const lip = c.g === "f" ? "#a8434f" : "#7a2a2a";
+  s += c.smile
+    ? `<path d="M43 65.5 Q50 71.5 57 65.5" stroke="${lip}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+    : `<path d="M45 67 L55 67" stroke="${lip}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  if(c.glasses) s += `<g fill="rgba(255,255,255,.2)" stroke="#1d1414" stroke-width="1.8"><circle cx="42" cy="50" r="6"/><circle cx="58" cy="50" r="6"/></g><path d="M48 50 L52 50" stroke="#1d1414" stroke-width="1.8"/>`;
+  return s + "</svg>";
+}
+const cardHTML = c => `<div class="inner"><div class="face front">${avatar(c)}<div class="nm">${c.name}</div></div><div class="face back"></div></div>`;
+function staticCard(c){ const d = document.createElement("div"); d.className = "card"; d.innerHTML = cardHTML(c); return d; }
+
+/* ======================================================
+   أدوات
+   ====================================================== */
+const $ = id => document.getElementById(id);
+let toastT;
+function toast(m, ms = 2000){ const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
+let bubbleT;
+function bubble(q, yes){
+  const b = $("bubble"); b.className = "bubble " + (yes ? "y" : "n");
+  b.innerHTML = `<small>${q}</small><b>${yes ? "نعم" : "لا"}</b>`;
+  requestAnimationFrame(() => b.classList.add("show"));
+  clearTimeout(bubbleT); bubbleT = setTimeout(() => b.classList.remove("show"), 1300);
+}
+function show(id){ ["home","lobby","game"].forEach(s => $(s).hidden = s !== id); window.scrollTo(0, 0); }
+function openM(id){ $(id).classList.add("open"); }
+function closeAll(){ document.querySelectorAll(".overlay").forEach(o => o.classList.remove("open")); }
+const rand = n => Math.floor(Math.random() * n);
+function loadScript(src){
+  return new Promise((res, rej) => {
+    const old = document.querySelector(`script[src="${src}"]`);
+    if(old){ old.dataset.ok ? res() : old.addEventListener("load", res); return; }
+    const s = document.createElement("script"); s.src = src;
+    s.onload = () => { s.dataset.ok = 1; res(); };
+    s.onerror = () => { s.remove(); rej(new Error("load")); };
+    document.head.appendChild(s);
+  });
+}
+
+/* ======================================================
+   حالة اللعبة
+   ====================================================== */
+let mode = null;          // "cpu" أو "online"
+let secret = null, pickSel = null, guessSel = null;
+let meReady = false, oppReady = false, myTurn = false, pending = false;
+let phase = "pick";       // pick | wait | play | guess | over
+let round = 0, scores = [0, 0], down = new Set(), asked = new Set(), logItems = [];
+let wantAgain = false, oppWantsAgain = false;
+const oppName = () => mode === "cpu" ? "الكمبيوتر" : "صديقك";
+
+/* ===== الرسم ===== */
+const board = $("board");
+function buildBoard(){
+  board.innerHTML = "";
+  CHARS.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "card"; b.dataset.id = c.id; b.setAttribute("aria-label", c.name);
+    b.innerHTML = cardHTML(c);
+    b.addEventListener("click", () => onCard(c.id));
+    board.appendChild(b);
+  });
+}
+function renderBoard(){
+  board.className = "board" + (phase === "pick" ? " picking" : "") + (phase === "guess" ? " guessing" : "");
+  [...board.children].forEach(b => {
+    const id = +b.dataset.id;
+    b.classList.toggle("down", phase !== "pick" && phase !== "wait" && down.has(id));
+    b.classList.toggle("sel", (phase === "pick" && id === pickSel) || ((phase === "wait") && id === secret));
+    b.setAttribute("aria-pressed", down.has(id));
+  });
+}
+function renderTurn(){
+  const t = $("turn"); t.className = "turn";
+  if(phase === "pick") t.innerHTML = `اختر شخصيتك السرية<small>${oppName()} ما راح يشوفها</small>`;
+  else if(phase === "wait") t.innerHTML = `ننتظر ${oppName()} يختار شخصيته…`;
+  else if(phase === "guess"){ t.className = "turn me"; t.innerHTML = "اضغط على الشخصية اللي تتوقعها"; }
+  else if(phase === "play"){
+    if(myTurn){ t.className = "turn me"; t.innerHTML = pending ? "ننتظر الجواب…" : `دورك<small>اسأل سؤال واحد أو خمّن الشخصية</small>`; }
+    else t.innerHTML = `دور ${oppName()}…<small>اقلب الشخصيات اللي ما تنطبق في هالوقت</small>`;
+  }
+  else if(phase === "over") t.innerHTML = "خلصت الجولة";
+  $("pickPanel").hidden = phase !== "pick";
+  $("playPanel").hidden = phase !== "play";
+  $("guessPanel").hidden = phase !== "guess";
+  const can = phase === "play" && myTurn && !pending;
+  document.querySelectorAll(".q").forEach(b => { b.disabled = !can; b.classList.toggle("asked", asked.has(b.dataset.q)); });
+  $("guessBtn").disabled = !can;
+  $("confirmPick").disabled = pickSel === null;
+  $("sMe").textContent = scores[0]; $("sOpp").textContent = scores[1];
+  $("oppLabel").textContent = oppName();
+  renderBoard();
+}
+function renderMine(){
+  $("mine").hidden = secret === null;
+  if(secret === null) return;
+  $("mineFace").innerHTML = avatar(CHARS[secret]);
+  $("mineName").textContent = CHARS[secret].name;
+}
+function addLog(text, yes){
+  logItems.unshift({text, yes});
+  logItems = logItems.slice(0, 4);
+  $("log").innerHTML = logItems.map(l => `<li><span>${l.text}</span><b class="${l.yes ? "y" : "n"}">${l.yes ? "نعم" : "لا"}</b></li>`).join("");
+}
+$("qs").innerHTML = QUESTIONS.map(q => `<button class="q" data-q="${q.id}">${q.label}</button>`).join("");
+document.querySelectorAll(".q").forEach(b => b.addEventListener("click", () => ask(b.dataset.q)));
+
+/* ===== بدء جولة ===== */
+function startMatch(m){
+  mode = m; round = 0; scores = [0, 0];
+  buildBoard(); show("game"); newRound();
+}
+function newRound(){
+  round++;
+  secret = null; pickSel = null; guessSel = null;
+  meReady = false; oppReady = false; myTurn = false; pending = false;
+  wantAgain = false; oppWantsAgain = false;
+  down = new Set(); asked = new Set(); logItems = []; $("log").innerHTML = "";
+  phase = "pick"; closeAll();
+  if(mode === "cpu") cpuNewRound();
+  renderMine(); renderTurn();
+}
+function onCard(id){
+  if(phase === "pick"){ pickSel = id; renderTurn(); return; }
+  if(phase === "play"){ down.has(id) ? down.delete(id) : down.add(id); renderBoard(); return; }
+  if(phase === "guess"){
+    if(down.has(id)) return toast("هذي الشخصية مقلوبة، اختر وحدة مفتوحة");
+    guessSel = id;
+    const f = $("guessFace"); f.innerHTML = ""; f.appendChild(staticCard(CHARS[id]));
+    $("guessText").textContent = `تتوقع إن شخصية ${oppName()} هي ${CHARS[id].name}؟ لو غلطت تخسر الجولة.`;
+    openM("guessModal");
+  }
+}
+function confirmPick(id){
+  secret = id; meReady = true; phase = "wait";
+  renderMine(); send({t:"ready"}); maybeBegin();
+}
+function maybeBegin(){
+  if(!(meReady && oppReady) || phase !== "wait") return;
+  phase = "play";
+  const iStart = mode === "cpu" ? round % 2 === 1 : (isHost === (round % 2 === 1));
+  myTurn = iStart;
+  renderTurn();
+  toast(iStart ? "أنت تبدأ!" : `${oppName()} يبدأ`);
+  if(mode === "cpu" && !myTurn) setTimeout(cpuTurn, 1000);
+}
+
+/* ===== الأسئلة والتخمين ===== */
+function ask(qid){
+  if(!(phase === "play" && myTurn && !pending)) return;
+  pending = true; asked.add(qid); renderTurn();
+  send({t:"ask", q:qid});
+}
+function doGuess(){
+  closeAll();
+  if(guessSel === null) return;
+  pending = true; phase = "play"; renderTurn();
+  send({t:"guess", id:guessSel, mine:secret});
+}
+function onMsg(m){
+  switch(m.t){
+    case "ready":
+      oppReady = true; maybeBegin(); break;
+    case "ask": {
+      const q = Q[m.q]; if(!q || secret === null) return;
+      const a = q.f(CHARS[secret]);
+      send({t:"answer", q:m.q, a});
+      addLog(`${oppName()} سأل: ${q.label}`, a);
+      myTurn = true; pending = false; renderTurn();
+      break;
+    }
+    case "answer": {
+      const q = Q[m.q]; if(!q) return;
+      bubble(q.label, m.a); addLog(`سألت: ${q.label}`, m.a);
+      myTurn = false; pending = false; renderTurn();
+      if(mode === "cpu") setTimeout(cpuTurn, 1700);
+      break;
+    }
+    case "guess": {
+      const correct = m.id === secret;
+      send({t:"result", correct, secret});
+      endRound(!correct, m.mine, `${oppName()} خمّن ${CHARS[m.id].name}`);
+      break;
+    }
+    case "result":
+      endRound(m.correct, m.secret, m.correct ? "خمّنت صح!" : `شخصية ${oppName()} كانت ${CHARS[m.secret].name}`);
+      break;
+    case "again":
+      oppWantsAgain = true;
+      if(wantAgain) newRound(); else toast(`${oppName()} يبي جولة جديدة`);
+      break;
+    case "full":
+      lobbyFail("الغرفة فيها لاعبين من قبل."); break;
+  }
+}
+function endRound(win, oppSecret, text){
+  phase = "over"; myTurn = false; pending = false;
+  scores[win ? 0 : 1]++; renderTurn();
+  $("endTitle").textContent = win ? "فزت! 🎉" : "خسرت 😅";
+  $("endText").textContent = text;
+  const r = $("reveal"); r.innerHTML = "";
+  [[secret, "شخصيتك"], [oppSecret, `شخصية ${oppName()}`]].forEach(([id, label]) => {
+    const d = document.createElement("div"); d.appendChild(staticCard(CHARS[id]));
+    d.insertAdjacentHTML("beforeend", `<small>${label}</small>`); r.appendChild(d);
+  });
+  $("againBtn").disabled = false; $("againBtn").textContent = "جولة جديدة";
+  setTimeout(() => openM("endModal"), 500);
+}
+function again(){
+  wantAgain = true; send({t:"again"});
+  if(mode === "cpu" || oppWantsAgain) newRound();
+  else { $("againBtn").disabled = true; $("againBtn").textContent = `ننتظر ${oppName()}…`; }
+}
+
+/* ======================================================
+   الكمبيوتر
+   ====================================================== */
+const cpu = {secret:null, cands:[], lastQ:null};
+function cpuNewRound(){
+  cpu.secret = rand(CHARS.length); cpu.cands = CHARS.map(c => c.id); cpu.lastQ = null;
+  setTimeout(() => onMsg({t:"ready"}), 700);
+}
+function cpuTurn(){
+  if(phase !== "play" || myTurn) return;
+  const n = cpu.cands.length;
+  if(n === 1 || (n === 2 && Math.random() < .5)){
+    const id = cpu.cands[rand(n)];
+    return onMsg({t:"guess", id, mine:cpu.secret});
+  }
+  const options = QUESTIONS.map(q => {
+    const yes = cpu.cands.filter(id => q.f(CHARS[id])).length;
+    return {q, score:Math.min(yes, n - yes)};
+  }).filter(o => o.score > 0).sort((a, b) => b.score - a.score).slice(0, 4);
+  const pick = options[rand(options.length)].q;
+  cpu.lastQ = pick.id;
+  onMsg({t:"ask", q:pick.id});
+}
+function cpuReceive(m){
+  if(m.t === "ask") setTimeout(() => onMsg({t:"answer", q:m.q, a:Q[m.q].f(CHARS[cpu.secret])}), 700);
+  else if(m.t === "answer"){
+    const q = Q[m.q]; cpu.cands = cpu.cands.filter(id => q.f(CHARS[id]) === m.a);
+  }
+  else if(m.t === "guess") setTimeout(() => onMsg({t:"result", correct:m.id === cpu.secret, secret:cpu.secret}), 700);
+}
+
+/* ======================================================
+   اللعب مع صديق (WebRTC عبر PeerJS)
+   ====================================================== */
+const PEER_SRC = "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js";
+const QR_SRC   = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+const PREFIX   = "narjes455-guesswho-";
+let peer = null, conn = null, isHost = false, joinTimer = null;
+
+function peerOpts(){
+  // للتجربة على سيرفر محلي: ?peerhost=localhost:9000
+  const h = new URLSearchParams(location.search).get("peerhost");
+  if(!h) return {debug:0};
+  const [host, port] = h.split(":");
+  return {host, port:+port || 9000, path:"/", secure:location.protocol === "https:", debug:0};
+}
+function send(m){
+  if(mode === "cpu") cpuReceive(m);
+  else if(conn && conn.open) conn.send(m);
+}
+function cleanupNet(){
+  clearTimeout(joinTimer);
+  try{ conn && conn.close(); }catch{}
+  try{ peer && peer.destroy(); }catch{}
+  peer = null; conn = null;
+}
+function lobbyFail(msg){ $("lobbyErr").textContent = msg; $("lobbyMsg").textContent = "ما قدرنا نكمل"; }
+function roomLink(code){ return location.origin + location.pathname + "?room=" + code; }
+
+async function hostRoom(){
+  cleanupNet(); show("lobby");
+  $("lobbyInvite").hidden = true; $("lobbyErr").textContent = ""; $("lobbyMsg").textContent = "جاري تجهيز الغرفة…";
+  try{ await loadScript(PEER_SRC); }catch{ return lobbyFail("تحتاج اتصال بالنت عشان تلعب مع صديق."); }
+  const code = String(1000 + rand(9000));
+  peer = new Peer(PREFIX + code, peerOpts());
+  peer.on("open", () => showInvite(code));
+  peer.on("connection", c => {
+    if(conn && conn.open){ c.on("open", () => { c.send({t:"full"}); setTimeout(() => c.close(), 400); }); return; }
+    setupConn(c, true);
+  });
+  peer.on("error", e => {
+    if(e.type === "unavailable-id") return hostRoom();
+    if(mode !== "online") lobbyFail("صار خطأ في الاتصال. جرّب مرة ثانية.");
+  });
+}
+function showInvite(code){
+  $("lobbyInvite").hidden = false;
+  $("codeBox").innerHTML = [...code].map(d => `<span>${d}</span>`).join("");
+  $("lobbyMsg").textContent = "ننتظر صديقك يدخل…";
+  $("shareBtn").onclick = () => {
+    const url = roomLink(code);
+    if(navigator.share) navigator.share({title:"خمّن شخصيتي", text:"تعال نلعب خمّن شخصيتي 🎮", url}).catch(() => {});
+    else copy(url);
+  };
+  $("copyBtn").onclick = () => copy(roomLink(code));
+  const qr = $("qr"); qr.innerHTML = "";
+  loadScript(QR_SRC).then(() => {
+    new QRCode(qr, {text:roomLink(code), width:300, height:300, colorDark:"#43121F", colorLight:"#ffffff"});
+  }).catch(() => qr.parentElement.hidden = true);
+}
+function copy(text){
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast("انسخ الرابط")).catch(() => toast(text, 4000));
+  else toast(text, 4000);
+}
+async function joinRoom(code){
+  code = String(code).replace(/[^\d٠-٩]/g, "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  if(code.length !== 4){ $("homeErr").textContent = "الرمز لازم يكون ٤ أرقام"; return; }
+  cleanupNet(); show("lobby");
+  $("lobbyInvite").hidden = true; $("lobbyErr").textContent = ""; $("lobbyMsg").textContent = "جاري الاتصال بصديقك…";
+  try{ await loadScript(PEER_SRC); }catch{ return lobbyFail("تحتاج اتصال بالنت عشان تلعب مع صديق."); }
+  peer = new Peer(undefined, peerOpts());
+  peer.on("open", () => {
+    setupConn(peer.connect(PREFIX + code, {reliable:true}), false);
+    joinTimer = setTimeout(() => { if(mode !== "online") lobbyFail("ما قدرنا نوصل للغرفة. تأكد إن صديقك فاتح الصفحة وجرّب مرة ثانية."); }, 15000);
+  });
+  peer.on("error", e => {
+    if(e.type === "peer-unavailable") lobbyFail("ما لقينا الغرفة. تأكد من الرمز وإن صديقك فاتح الصفحة.");
+    else if(mode !== "online") lobbyFail("صار خطأ في الاتصال. جرّب مرة ثانية.");
+  });
+}
+function setupConn(c, host){
+  conn = c; isHost = host;
+  c.on("open", () => { clearTimeout(joinTimer); startMatch("online"); toast("اتصلتوا! 🎉"); });
+  c.on("data", m => { if(m && typeof m === "object") onMsg(m); });
+  c.on("close", () => {
+    if(mode !== "online") return;
+    mode = null; closeAll();
+    $("endTitle").textContent = "انقطع الاتصال";
+    $("endText").textContent = "صديقك طلع من اللعبة أو انقطع النت عنده.";
+    $("reveal").innerHTML = ""; $("againBtn").disabled = true; $("againBtn").textContent = "جولة جديدة";
+    openM("endModal");
+  });
+}
+function goHome(){
+  cleanupNet(); mode = null; closeAll(); show("home"); $("homeErr").textContent = "";
+}
+
+/* ======================================================
+   ربط الأزرار
+   ====================================================== */
+$("cpuBtn").addEventListener("click", () => { cleanupNet(); startMatch("cpu"); });
+$("hostBtn").addEventListener("click", hostRoom);
+$("joinBtn").addEventListener("click", () => joinRoom($("codeInput").value));
+$("codeInput").addEventListener("keydown", e => { if(e.key === "Enter") joinRoom(e.target.value); });
+$("cancelBtn").addEventListener("click", goHome);
+$("confirmPick").addEventListener("click", () => pickSel !== null && confirmPick(pickSel));
+$("randomPick").addEventListener("click", () => { pickSel = rand(CHARS.length); renderTurn(); });
+$("guessBtn").addEventListener("click", () => { if(phase === "play" && myTurn && !pending){ phase = "guess"; renderTurn(); } });
+$("cancelGuess").addEventListener("click", () => { phase = "play"; renderTurn(); });
+$("doGuess").addEventListener("click", doGuess);
+$("againBtn").addEventListener("click", again);
+$("homeBtn").addEventListener("click", goHome);
+$("rulesBtn").addEventListener("click", () => openM("rulesModal"));
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => {
+  closeAll(); if(phase === "guess"){ guessSel = null; }
+}));
+document.querySelectorAll(".overlay").forEach(o => o.addEventListener("click", e => {
+  if(e.target === o && o.id !== "endModal") closeAll();
+}));
+document.addEventListener("keydown", e => { if(e.key === "Escape" && !$("endModal").classList.contains("open")) closeAll(); });
+
+// وجوه الواجهة
+[3, 13, 20].forEach(i => $("faces").appendChild(staticCard(CHARS[i])));
+
+// الدخول من رابط دعوة
+const roomParam = new URLSearchParams(location.search).get("room");
+if(roomParam){
+  const u = new URL(location.href); u.searchParams.delete("room"); history.replaceState(null, "", u);
+  joinRoom(roomParam);
+}
+
+// لما يسكّر اللاعب الصفحة نقفل الاتصال عشان صديقه يعرف
+window.addEventListener("pagehide", () => { try{ conn && conn.close(); }catch{} });
+
+if("serviceWorker" in navigator) navigator.serviceWorker.register("../sw.js").catch(() => {});
+</script>
+</body>
+</html>
