@@ -65,7 +65,17 @@
   }
   .hbtns{display:flex;gap:8px}
   header > .icon-btn{margin-inline-start:48px}
-  .mode{font-size:.8rem;opacity:.75;text-align:center;margin-top:-4px;height:1.2em}
+  .sub{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:-2px;min-height:34px}
+  .mode{font-size:.8rem;opacity:.75}
+  .hint{
+    display:flex;align-items:center;gap:6px;
+    border:1.5px dashed var(--line);background:transparent;border-radius:999px;
+    padding:4px 12px;font-size:.85rem;font-weight:600;
+  }
+  .hint:hover{border-color:var(--saffron)}
+  .hint.shown{border-style:solid;border-color:var(--saffron);background:rgba(227,167,47,.16);cursor:default}
+  .hint.shown b{color:var(--saffron)}
+  .hint.pop{animation:pop .25s}
 
   main{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
   .board{display:grid;grid-template-rows:repeat(6,var(--tile));gap:6px}
@@ -139,6 +149,7 @@
   }
   .bar i.hl{background:var(--green)}
   .answer{text-align:center;font-size:1.1rem;margin-bottom:10px}
+  .answer .cat{display:block;font-size:.85rem;opacity:.8;margin-top:2px}
   .answer strong{font-family:"Reem Kufi",sans-serif;font-size:1.6rem;display:block}
   .actions{display:flex;gap:8px}
   .btn{
@@ -168,7 +179,10 @@
       <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="1" y="9" width="4" height="8" rx="1"/><rect x="7" y="4" width="4" height="13" rx="1"/><rect x="13" y="1" width="4" height="16" rx="1"/></svg>
     </button>
   </header>
-  <div class="mode" id="modeLabel"></div>
+  <div class="sub">
+    <span class="mode" id="modeLabel"></span>
+    <button class="hint" id="hintBtn" aria-live="polite">💡 تلميح</button>
+  </div>
 
   <main><div class="board" id="board" aria-label="لوحة التخمين"></div></main>
   <div class="keyboard" id="keyboard"></div>
@@ -187,6 +201,7 @@
       <div class="example"><div class="tile">س</div><div class="tile">ح</div><div class="tile">ا</div><div class="tile" data-state="absent">ب</div><div class="tile">ة</div></div>
       <p>البنفسجي: الحرف مو موجود في الكلمة.</p>
       <p>الهمزات (أ إ آ) تُكتب ا. كل جولة لها كلمة جديدة.</p>
+      <p>علِقت؟ اضغط 💡 تلميح وتطلع لك فئة الكلمة، مثل حيوانات أو أكل وشرب.</p>
     </div>
   </div>
 
@@ -207,7 +222,12 @@
 
 <script src="words.js"></script>
 <script>
-const WORDS = [...new Set(WORDS_LIST)].filter(w => [...w].length === 5);
+/* نبني قائمة الكلمات من الفئات، ونحفظ فئة كل كلمة عشان التلميح */
+const CAT_OF = {};
+CATEGORIES.forEach(c => c.words.forEach(w => {
+  if([...w].length === 5 && !CAT_OF[w]) CAT_OF[w] = c;
+}));
+const WORDS = Object.keys(CAT_OF);
 
 const MAX = 6, LEN = 5;
 const WIN_MSG = ["عبقري!","مذهل!","رائع!","ممتاز!","حلو!","لحقت عليها!"];
@@ -237,7 +257,7 @@ function nextWord(){
 }
 
 /* ===== الحالة ===== */
-let target = null, guesses, results, cur, over, busy, round = 0;
+let hintUsed = false, target = null, guesses, results, cur, over, busy, round = 0;
 
 const $ = id => document.getElementById(id);
 const board = $("board"), keyboard = $("keyboard");
@@ -363,7 +383,7 @@ function openStats(ended){
     `<div class="bar"><span>${i+1}</span><i class="${won && i===guesses.length-1 ? "hl":""}" style="width:${Math.max(8, n/top*100)}%">${n}</i></div>`
   ).join("");
   const ans = $("answer");
-  if(over){ ans.hidden = false; ans.innerHTML = `${won ? "الكلمة كانت" : "خلصت المحاولات، الكلمة"}<strong>${target}</strong>`; }
+  if(over){ ans.hidden = false; ans.innerHTML = `${won ? "الكلمة كانت" : "خلصت المحاولات، الكلمة"}<strong>${target}</strong><span class="cat">${CAT_OF[target].icon} ${CAT_OF[target].name}</span>`; }
   else ans.hidden = true;
   $("shareBtn").hidden = !over;
   $("statsModal").classList.add("open");
@@ -372,7 +392,7 @@ function openStats(ended){
 function share(){
   const won = guesses[guesses.length-1] === target;
   const emoji = {correct:"🟩", present:"🟨", absent:"⬛"};
-  const title = `خمّن الكلمة — الجولة ${round}: ${won ? guesses.length : "X"}/${MAX}`;
+  const title = `خمّن الكلمة — الجولة ${round}: ${won ? guesses.length : "X"}/${MAX}${hintUsed ? " 💡" : ""}`;
   const grid = results.map(r => "\u200F" + r.map(s => emoji[s]).join("")).join("\n");
   const text = `${title}\n${grid}\n${location.href}`;
   if(navigator.share) navigator.share({text}).catch(()=>{});
@@ -387,12 +407,23 @@ function toast(msg){
 }
 
 /* ===== بدء اللعبة ===== */
+/* ===== التلميح: يكشف فئة الكلمة ===== */
+function showHint(){
+  if(hintUsed) return;
+  hintUsed = true;
+  const c = CAT_OF[target], h = $("hintBtn");
+  h.innerHTML = `${c.icon} الفئة: <b>${c.name}</b>`;
+  h.classList.add("shown","pop");
+}
+
 function start(){
   target = nextWord();
   guesses = []; results = []; cur = []; over = false; busy = false;
   round++;
   buildBoard(); buildKeyboard();
   $("modeLabel").textContent = `الجولة ${round}`;
+  hintUsed = false;
+  const h = $("hintBtn"); h.className = "hint"; h.textContent = "💡 تلميح";
 }
 
 /* الكيبورد الفعلي */
@@ -415,6 +446,7 @@ document.querySelectorAll(".overlay").forEach(o => o.addEventListener("click", e
 $("helpBtn").addEventListener("click", () => $("helpModal").classList.add("open"));
 $("statsBtn").addEventListener("click", () => openStats(false));
 $("shareBtn").addEventListener("click", share);
+$("hintBtn").addEventListener("click", showHint);
 $("practiceBtn").addEventListener("click", () => { closeAll(); start(); });
 
 start();
