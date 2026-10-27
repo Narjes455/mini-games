@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5B1A2A">
+<meta name="description" content="لحالك — لعبة جماعية تختبر كم تفهمون بعض. من ٣ إلى ٢٠ لاعب، كل واحد من جواله. طورين: فاهمني وماحد مثلي، مع رهان بالأرقام.">
+<title>لحالك — حوش</title>
+<link rel="manifest" href="../manifest.json">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Reem+Kufi:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maroon:#5B1A2A; --maroon-deep:#43121F; --cream:#FBEFD9;
+    --green:#2F7D4F; --saffron:#E3A72F; --mauve:#7A5A63; --red:#C0392B; --blue:#3a6ea5;
+    --line:rgba(251,239,217,.28);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html,body{margin:0}
+  body{
+    min-height:100vh;background:var(--maroon);color:var(--cream);
+    font-family:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  button:disabled{cursor:default;opacity:.45}
+  button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+  [hidden]{display:none!important}
+
+  .sadu{
+    height:14px;
+    background:
+      conic-gradient(from 135deg at 50% 0,var(--saffron) 90deg,transparent 0) 0 0/14px 7px repeat-x,
+      conic-gradient(from -45deg at 50% 100%,var(--cream) 90deg,transparent 0) 0 100%/14px 7px repeat-x,
+      var(--green);
+  }
+  header{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+  h1{font-family:"Reem Kufi",sans-serif;font-size:2rem;font-weight:700;margin:0;line-height:1}
+  .icon-btn{
+    width:40px;height:40px;border-radius:50%;background:transparent;border:1.5px solid var(--line);
+    display:grid;place-items:center;color:var(--cream);text-decoration:none;font-size:1.15rem;font-weight:700;flex-shrink:0;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:4px 16px 32px}
+  .narrow{max-width:460px;margin:0 auto}
+  .center{text-align:center}
+  .muted{opacity:.75}
+
+  .btn{border:0;border-radius:10px;padding:13px 18px;font-size:1rem;font-weight:700;background:var(--green)}
+  .btn.alt{background:transparent;border:1.5px solid var(--line)}
+  .btn.gold{background:var(--saffron);color:var(--maroon-deep)}
+  .btn.full{width:100%}
+  .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .row > .btn{flex:1;min-width:130px}
+  input[type=text]{
+    width:100%;border:1.5px solid var(--line);background:rgba(251,239,217,.06);color:var(--cream);
+    border-radius:10px;padding:13px 14px;font:inherit;font-size:1.05rem;
+  }
+  input::placeholder{color:rgba(251,239,217,.55)}
+  label.f{display:block;font-size:.85rem;opacity:.8;margin:12px 0 6px}
+  .err{color:#ffb4a8;min-height:1.5em;margin:8px 0 0;font-size:.92rem;text-align:center}
+  .card{background:var(--maroon-deep);border:1.5px solid var(--line);border-radius:14px;padding:18px}
+
+  /* ===== الرئيسية ===== */
+  .hero{text-align:center;padding:10px 0 18px}
+  .hero p{line-height:1.85;max-width:32em;margin:0 auto;opacity:.92}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 6px}
+  .mode{border-radius:12px;padding:12px;text-align:start;background:rgba(251,239,217,.08);border:1.5px solid var(--line)}
+  .mode b{display:block;font-size:1.05rem;margin-bottom:2px}
+  .mode span{font-size:.82rem;opacity:.85;line-height:1.6}
+  .mode.majority{border-color:rgba(58,110,165,.9)}
+  .mode.unique{border-color:var(--saffron)}
+  .betnote{font-size:.85rem;opacity:.85;line-height:1.7;text-align:center;margin:8px 0 18px}
+  .or{display:flex;align-items:center;gap:10px;margin:18px 0;opacity:.7;font-size:.9rem}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* ===== المضيف: الغرفة ===== */
+  .lobbyGrid{display:grid;gap:16px;grid-template-columns:1fr}
+  @media (min-width:760px){ .lobbyGrid{grid-template-columns:minmax(0,300px) 1fr} }
+  .code{display:inline-flex;gap:6px;direction:ltr;margin:6px 0 12px}
+  .code span{
+    width:48px;height:58px;border-radius:8px;background:var(--cream);color:var(--maroon-deep);
+    display:grid;place-items:center;font-size:1.9rem;font-weight:700;
+  }
+  .qr{background:#fff;padding:10px;border-radius:10px;display:inline-block;margin-bottom:12px}
+  .qr img,.qr canvas{display:block;width:160px;height:160px}
+  .players{display:flex;flex-wrap:wrap;gap:8px;min-height:44px;align-content:flex-start}
+  .chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 13px;font-weight:600;background:rgba(251,239,217,.12)}
+  .chip.off{opacity:.45}
+  .chip.done{background:var(--green)}
+  .chip.me::after{content:"(أنت)";font-size:.75rem;opacity:.8}
+  .seg{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;padding:3px;flex-wrap:wrap}
+  .seg button{border:0;background:transparent;border-radius:999px;padding:6px 13px;font-weight:600}
+  .seg button[aria-pressed="true"]{background:var(--cream);color:var(--maroon-deep)}
+  .setting{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:12px 0}
+  .switch{display:flex;align-items:center;gap:10px;margin:14px 0 6px;font-weight:600;cursor:pointer}
+  .switch input{width:20px;height:20px;accent-color:var(--green)}
+
+  /* ===== شارة الطور ===== */
+  .mtag{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 14px;font-weight:700;
+  }
+  .mtag.majority{background:var(--blue)}
+  .mtag.unique{background:var(--saffron);color:var(--maroon-deep)}
+  .mtip{text-align:center;font-size:.92rem;opacity:.85;margin-top:6px}
+
+  /* ===== السؤال ===== */
+  .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600;margin-bottom:6px}
+  .timer{
+    min-width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+    font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;
+    background:conic-gradient(var(--saffron) calc(var(--p,1) * 360deg), rgba(251,239,217,.12) 0);
+    position:relative;flex-shrink:0;
+  }
+  .timer::before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--maroon)}
+  .timer b{position:relative}
+  .timer.low{animation:pulse .6s infinite alternate}
+  .question{
+    font-family:"Reem Kufi",sans-serif;font-weight:700;text-align:center;
+    font-size:clamp(1.7rem,6vw,3.4rem);line-height:1.35;margin:16px 0 20px;
+  }
+  .answered{text-align:center;font-size:1.05rem;margin-bottom:12px}
+  .answered b{font-size:1.4rem;color:var(--saffron)}
+  .tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+  .tools .btn{padding:10px 14px;font-size:.92rem}
+  .custom{display:flex;gap:8px;margin-top:12px}
+  .custom input{flex:1}
+
+  /* ===== أرقام الرهان ===== */
+  .betlabel{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 8px;font-weight:600}
+  .betlabel small{font-weight:400;opacity:.75;font-size:.8rem}
+  .bets{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .bet{
+    width:48px;height:48px;border-radius:50%;border:2px solid var(--line);background:rgba(251,239,217,.06);
+    font-size:1.25rem;font-weight:700;display:grid;place-items:center;font-variant-numeric:tabular-nums;
+  }
+  .bet[aria-pressed="true"]{background:var(--saffron);border-color:var(--saffron);color:var(--maroon-deep);transform:scale(1.08)}
+  .bet.burnt{opacity:.25;text-decoration:line-through;pointer-events:none}
+  .chipsLeft{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:6px}
+  .chipsLeft span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:.85rem;font-weight:700;background:rgba(251,239,217,.12)}
+  .chipsLeft span.burnt{opacity:.3;text-decoration:line-through}
+
+  /* ===== المراجعة ===== */
+  .hint{text-align:center;font-size:.9rem;opacity:.8;margin:-6px 0 14px;line-height:1.7}
+  .groups{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .group{
+    position:relative;text-align:start;border:2px solid var(--line);background:var(--maroon-deep);
+    border-radius:12px;padding:12px 12px 10px;min-height:92px;width:100%;
+  }
+  .group .ans{font-size:1.25rem;font-weight:700;display:block;padding-inline-end:28px;word-break:break-word}
+  .group .alts{font-size:.8rem;opacity:.7;display:block}
+  .group .names{font-size:.82rem;opacity:.85;display:block;margin-top:6px;line-height:1.5}
+  .group .badge{display:inline-block;margin-top:8px;font-size:.8rem;font-weight:700;border-radius:999px;padding:2px 10px;background:rgba(251,239,217,.14)}
+  .group.win{border-color:var(--saffron);background:rgba(227,167,47,.14)}
+  .group.win .badge{background:var(--saffron);color:var(--maroon-deep)}
+  .group.sel{outline:3px solid var(--cream);outline-offset:2px}
+  .group.rej{opacity:.5}
+  .group.rej .ans{text-decoration:line-through}
+  .group .x{
+    position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);
+    background:transparent;font-size:.95rem;line-height:1;display:grid;place-items:center;
+  }
+  .group.rej .x{background:var(--red);border-color:var(--red)}
+  .noans{text-align:center;font-size:.88rem;opacity:.75;margin-top:12px}
+
+  /* ===== الترتيب ===== */
+  .board{list-style:none;margin:0 auto;padding:0;max-width:600px;display:grid;gap:8px}
+  .board li{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(251,239,217,.08)}
+  .board .rk{width:26px;text-align:center;font-weight:700;opacity:.8}
+  .board .nm{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .board .bt{font-size:.8rem;border-radius:999px;padding:2px 9px;white-space:nowrap;background:rgba(251,239,217,.1)}
+  .board .bt.ok{background:var(--saffron);color:var(--maroon-deep);font-weight:700}
+  .board .sc{font-size:1.25rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:30px;text-align:center}
+  .board li.top{background:rgba(227,167,47,.2);border:1.5px solid var(--saffron)}
+  .h2{font-family:"Reem Kufi",sans-serif;font-size:1.8rem;text-align:center;margin:10px 0 16px}
+  .podium{text-align:center;margin:8px 0 22px}
+  .podium .crown{font-size:3rem;line-height:1}
+  .podium b{display:block;font-family:"Reem Kufi",sans-serif;font-size:clamp(2rem,8vw,3.2rem)}
+
+  /* ===== اللاعب ===== */
+  .pq{font-family:"Reem Kufi",sans-serif;font-size:clamp(1.5rem,7vw,2.2rem);text-align:center;line-height:1.4;margin:10px 0 16px}
+  .sent{text-align:center;padding:18px 0 6px}
+  .sent .big{font-size:2.6rem}
+  .sent .mine{display:inline-block;margin:10px 0;font-size:1.4rem;font-weight:700;background:rgba(251,239,217,.1);border-radius:10px;padding:8px 18px}
+  .sent .mine small{display:block;font-size:.8rem;font-weight:400;opacity:.8}
+  .result{text-align:center;padding:12px 0}
+  .result .emo{font-size:3.6rem;line-height:1.1}
+  .result h2{font-family:"Reem Kufi",sans-serif;font-size:2rem;margin:8px 0 4px}
+  .result p{margin:.35em 0;line-height:1.7}
+  .stat{display:flex;justify-content:center;gap:26px;margin:16px 0}
+  .stat b{display:block;font-size:2rem;font-variant-numeric:tabular-nums}
+  .stat span{font-size:.82rem;opacity:.8}
+  .reveal{list-style:none;padding:0;margin:14px 0 0;display:grid;gap:6px;text-align:start}
+  .reveal li{padding:8px 12px;border-radius:10px;background:rgba(251,239,217,.07);border:1.5px solid transparent}
+  .reveal li.win{border-color:var(--saffron);background:rgba(227,167,47,.12)}
+  .reveal li.rej{opacity:.5}
+  .reveal li.rej b{text-decoration:line-through}
+  .reveal li.me{box-shadow:inset 4px 0 0 var(--cream)}
+  .reveal b{font-size:1.05rem}
+  .reveal .n{float:left;font-size:.8rem;opacity:.8}
+  .reveal small{display:block;font-size:.8rem;opacity:.8}
+  .wait{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;opacity:.9}
+  .spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--saffron);animation:spin 1s linear infinite}
+
+  .toast{
+    position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:50%;transform:translateX(-50%);
+    background:var(--cream);color:var(--maroon-deep);padding:10px 18px;border-radius:8px;font-weight:700;
+    opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:calc(100vw - 32px);text-align:center;
+  }
+  .toast.show{opacity:1}
+  .overlay{position:fixed;inset:0;background:rgba(40,10,18,.75);display:none;align-items:center;justify-content:center;padding:20px;z-index:30}
+  .overlay.open{display:flex}
+  .modal{background:var(--maroon-deep);border:1.5px solid var(--line);border-radius:14px;width:100%;max-width:440px;max-height:88vh;overflow:auto;padding:22px 20px;position:relative}
+  .modal h2{font-family:"Reem Kufi",sans-serif;font-size:1.6rem;margin:0 0 8px}
+  .modal h3{margin:14px 0 4px;font-size:1.05rem}
+  .modal p,.modal ol{line-height:1.85;margin:.3em 0}
+  .modal ol{padding-inline-start:1.2em}
+  .close{position:absolute;top:12px;left:12px;background:none;border:0;font-size:1.5rem;line-height:1}
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes pulse{to{transform:scale(1.08)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+  <div class="sadu" aria-hidden="true"></div>
+  <header>
+    <a class="icon-btn" href="../" aria-label="كل الألعاب">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="1" y="1" width="7" height="7" rx="1.5"/><rect x="10" y="1" width="7" height="7" rx="1.5"/><rect x="1" y="10" width="7" height="7" rx="1.5"/><rect x="10" y="10" width="7" height="7" rx="1.5"/></svg>
+    </a>
+    <h1>لحالك</h1>
+    <button class="icon-btn" id="rulesBtn" aria-label="طريقة اللعب">؟</button>
+  </header>
+
+  <main class="wrap" id="app"></main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="overlay" id="rulesModal">
+    <div class="modal" role="dialog" aria-labelledby="rulesTitle">
+      <button class="close" data-close aria-label="إغلاق">×</button>
+      <h2 id="rulesTitle">طريقة اللعب</h2>
+      <p>لعبة تختبر كم تفهمون بعض، من ٣ إلى ٢٠ لاعب، كل واحد من جواله. ولو تبون تعرضونها على التلفزيون أو اللابتوب، افتحوا الغرفة منه.</p>
+      <p>يطلع سؤال للكل، مثل «اذكر فاكهة». كل لاعب يكتب جوابه بدون ما يشوف أجوبة الباقين، وبعدها تنكشف الأجوبة قدام الكل ويبدأ النقاش والطقطقة.</p>
+      <h3>🤝 فاهمني</h3>
+      <p>أكبر مجموعة كتبت نفس الجواب تاخذ النقاط. تكتب «تفاح» ولا «موز»؟ لازم تتوقع وش بيكتب أغلب اللي معك.</p>
+      <h3>🦄 ماحد مثلي</h3>
+      <p>النقاط لكل واحد جوابه ما كتبه أحد غيره. دوّر على جواب صحيح محد بينتبه له.</p>
+      <h3>🎯 الرهان</h3>
+      <p>كل جولة تراهن برقم، وإذا فزت تاخذه نقاط. بس الرقم ينحرق سواء فزت أو خسرت، فخلّ الأرقام الكبيرة للجولات اللي أنت واثق منها.</p>
+      <p class="muted">إذا خلص الوقت وما اخترت رقم، ينحرق أصغر رقم عندك. والمضيف يقدر يدمج الأجوبة اللي بنفس المعنى، ويشطب الجواب اللي ما ينطبق على السؤال.</p>
+    </div>
+  </div>
+
+<script>
+/* ======================================================
+   بنك الأسئلة — تقدر تضيف عليه
+   ====================================================== */
+const QUESTIONS = [
+  "اذكر فاكهة", "اذكر خضار", "اذكر مدينة سعودية", "اذكر دولة عربية", "اذكر دولة أوروبية",
+  "اذكر لون", "اذكر حيوان يعيش في الصحراء", "اذكر حيوان أليف", "اذكر طير", "اذكر حيوان بحري",
+  "اذكر أكلة سعودية", "اذكر حلى", "اذكر مشروب بارد", "اذكر نوع قهوة", "اذكر شي تحطه في الكبسة",
+  "اذكر شي تلقاه في المطبخ", "اذكر شي في شنطة المدرسة", "اذكر شي تاخذه معك للبر", "اذكر شي تاخذه معك للبحر",
+  "اذكر شي أحمر", "اذكر شي أصفر", "اذكر شي يطير", "اذكر شي حار", "اذكر شي بارد",
+  "اذكر مهنة", "اذكر رياضة", "اذكر نادي سعودي", "اذكر لاعب كرة قدم", "اذكر تطبيق في جوالك",
+  "اذكر شي تسويه في رمضان", "اذكر شي تسويه في العيد", "اذكر شي يصير في المطر",
+  "اذكر شي في السوبرماركت", "اذكر ماركة سيارات", "اذكر وسيلة مواصلات", "اذكر عضو في جسم الإنسان",
+  "اذكر شي له ريحة حلوة", "اذكر شي في الحمام", "اذكر شي في غرفة النوم", "اذكر أداة مدرسية",
+  "اذكر شي يشتغل بالكهرباء", "اذكر لعبة شعبية", "اذكر شي تلبسه في الشتا", "اذكر شي تلبسه في الصيف",
+  "اذكر اسم ولد يبدأ بحرف م", "اذكر اسم بنت يبدأ بحرف س", "اذكر كلمة تبدأ بحرف ق", "اذكر كلمة تبدأ بحرف ش",
+  "اذكر شي دائري", "اذكر شي مربع", "اذكر شي تشوفه في السما", "اذكر شي في البحر",
+  "اذكر نوع شجر", "اذكر نوع ورد", "اذكر شي تسويه لما تملّ", "اذكر هواية",
+  "اذكر شي تشتريه من الصيدلية", "اذكر شي ما تطلع من البيت بدونه", "اذكر شي يخوّف",
+  "اذكر شي يضحّك", "اذكر شي في المسجد", "اذكر معلم سياحي في السعودية", "اذكر شي تسويه أول ما تصحى",
+  "اذكر أكلة سريعة", "اذكر نوع شوكولاتة", "اذكر نوع عصير", "اذكر شي له عجلات", "اذكر شي فيه أزرار"
+];
+
+const MODES = {
+  majority:{name:"فاهمني",    emo:"🤝", tip:"اكتب اللي تتوقع أغلبهم بيكتبونه", win:"الأغلبية 👑"},
+  unique:  {name:"ماحد مثلي", emo:"🦄", tip:"اكتب جواب صحيح محد بينتبه له",     win:"لحاله ⭐"}
+};
+const MIN_PLAYERS = 3, MAX_PLAYERS = 20;
+
+/* ======================================================
+   أدوات عامة
+   ====================================================== */
+const $ = id => document.getElementById(id);
+const app = $("app");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const rand = n => Math.floor(Math.random() * n);
+const AR = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+const range = n => Array.from({length:n}, (_, i) => i + 1);
+let toastT;
+function toast(m, ms = 2200){ const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms); }
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+};
+function shuffle(a){ for(let i = a.length - 1; i > 0; i--){ const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadScript(src){
+  return new Promise((res, rej) => {
+    const old = document.querySelector(`script[src="${src}"]`);
+    if(old){ old.dataset.ok ? res() : old.addEventListener("load", res); return; }
+    const s = document.createElement("script"); s.src = src;
+    s.onload = () => { s.dataset.ok = 1; res(); };
+    s.onerror = () => { s.remove(); rej(new Error("load")); };
+    document.head.appendChild(s);
+  });
+}
+/* توحيد الجواب عشان «التفاح» و«تفاح» و«تفّاح» تنحسب نفس الشي */
+function norm(s){
+  return String(s).trim().toLowerCase()
+    .replace(/[ً-ْٰـ]/g, "")
+    .replace(/[أإآٱ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/ؤ/g, "و").replace(/ئ/g, "ي")
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .split(/\s+/).filter(Boolean)
+    .map(w => w.length > 3 && w.startsWith("ال") ? w.slice(2) : w)
+    .join(" ");
+}
+/* مين يفوز حسب الطور */
+function winningGroups(groups, mode){
+  const valid = groups.filter(g => !g.rej);
+  if(mode === "majority"){
+    const max = Math.max(0, ...valid.map(g => g.pids.length));
+    return max < 2 ? new Set() : new Set(valid.filter(g => g.pids.length === max));
+  }
+  return new Set(valid.filter(g => g.pids.length === 1));
+}
+function modeTag(mode){ const m = MODES[mode]; return `<span class="mtag ${mode}">${m.emo} ${m.name}</span>`; }
+function paintTimer(left, total){
+  const t = $("timer"); if(!t) return;
+  const s = Math.ceil(left / 1000);
+  t.querySelector("b").textContent = AR(s);
+  t.style.setProperty("--p", (left / total).toFixed(3));
+  t.classList.toggle("low", s <= 5 && s > 0);
+}
+/* أزرار الرهان (تُستخدم عند اللاعب وعند المضيف لو يلعب) */
+function betButtons(all, left, selected){
+  return all.map(n => {
+    const burnt = !left.includes(n);
+    return `<button class="bet ${burnt ? "burnt" : ""}" data-bet="${n}" aria-pressed="${n === selected}" ${burnt ? 'disabled aria-label="محروق"' : ""}>${AR(n)}</button>`;
+  }).join("");
+}
+
+/* ======================================================
+   الاتصال (PeerJS)
+   ====================================================== */
+const PEER_SRC = "https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js";
+const QR_SRC   = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+const PREFIX   = "narjes455-lahalak-";
+let peer = null;
+function peerOpts(){
+  const h = new URLSearchParams(location.search).get("peerhost");   // للتجربة على سيرفر محلي
+  if(!h) return {debug:0};
+  const [host, port] = h.split(":");
+  return {host, port:+port || 9000, path:"/", secure:location.protocol === "https:", debug:0};
+}
+function roomLink(code){ return location.origin + location.pathname + "?room=" + code; }
+function copy(text){
+  if(navigator.clipboard) navigator.clipboard.writeText(text).then(() => toast("انسخ الرابط")).catch(() => toast(text, 4000));
+  else toast(text, 4000);
+}
+
+/* ======================================================
+   الشاشة الرئيسية
+   ====================================================== */
+function viewHome(prefill = "", err = ""){
+  app.innerHTML = `
+    <section class="narrow">
+      <div class="hero">
+        <p>لعبة جماعية تختبر <b>كم تفهمون بعض</b>. من ${AR(MIN_PLAYERS)} إلى ${AR(MAX_PLAYERS)} لاعب، كل واحد من جواله. يطلع سؤال للكل، وكل واحد يكتب جوابه بالسر، وبعدها تنكشف الأجوبة ويبدأ النقاش والطقطقة 😄</p>
+        <div class="modes">
+          <div class="mode majority"><b>🤝 فاهمني</b><span>أكبر مجموعة كتبت نفس الجواب تاخذ النقاط</span></div>
+          <div class="mode unique"><b>🦄 ماحد مثلي</b><span>النقاط لكل واحد جوابه ما كتبه أحد غيره</span></div>
+        </div>
+        <p class="betnote">🎯 كل جولة تراهن برقم، وإذا فزت تاخذه نقاط. بس الرقم ينحرق سواء فزت أو خسرت!</p>
+      </div>
+      <button class="btn full" id="hostBtn">📺 افتح غرفة جديدة</button>
+      <p class="muted center" style="font-size:.85rem;margin:8px 0 0">افتحها على التلفزيون أو اللابتوب، أو على جوالك وتلعب معهم</p>
+      <div class="or">أو ادخل غرفة</div>
+      <label class="f" for="nameIn">اسمك</label>
+      <input type="text" id="nameIn" maxlength="16" placeholder="مثلًا: نورة" value="${esc(store.get("lahalak-name", ""))}" autocomplete="nickname">
+      <label class="f" for="codeIn">رمز الغرفة</label>
+      <input type="text" id="codeIn" inputmode="numeric" maxlength="4" placeholder="٤ أرقام" value="${esc(prefill)}" style="text-align:center;letter-spacing:.3em">
+      <button class="btn gold full" id="joinBtn" style="margin-top:14px">ادخل</button>
+      <p class="err" id="homeErr" role="alert">${esc(err)}</p>
+    </section>`;
+  $("hostBtn").onclick = hostCreate;
+  const go = () => playerJoin($("codeIn").value, $("nameIn").value);
+  $("joinBtn").onclick = go;
+  ["nameIn","codeIn"].forEach(id => $(id).addEventListener("keydown", e => { if(e.key === "Enter") go(); }));
+  if(prefill) $("nameIn").focus();
+}
+
+/* ======================================================
+   المضيف
+   ====================================================== */
+const HOST_PID = "host";
+const H = {
+  code:"", players:new Map(), rounds:8, secs:30, modeSetting:"mix", mode:"majority",
+  round:0, deck:[], q:"", phase:"lobby", endsAt:0, tick:null,
+  groups:[], autoGroups:[], sel:null, hostPlays:false, hostName:"", self:null, last:{}
+};
+function hostSend(p, m){ if(p.conn && p.conn.open) try{ p.conn.send(m); }catch{} }
+function hostBroadcast(m){ H.players.forEach(p => hostSend(p, m)); }
+function hostSelf(){
+  H.self = H.self || {pid:HOST_PID, name:"", score:0, answer:null, bet:null, chips:range(H.rounds), conn:null, online:true, isHost:true};
+  H.self.name = H.hostName || "المضيف";
+  return H.self;
+}
+function allPlayers(){
+  const list = [...H.players.values()];
+  if(H.hostPlays) list.unshift(hostSelf());
+  return list;
+}
+const byPid = pid => pid === HOST_PID ? H.self : H.players.get(pid);
+const roundMode = r => H.modeSetting === "mix" ? (r % 2 === 1 ? "majority" : "unique") : H.modeSetting;
+
+async function hostCreate(){
+  app.innerHTML = `<div class="wait"><span class="spin"></span>جاري تجهيز الغرفة…</div><p class="err" id="hErr"></p>`;
+  try{ await loadScript(PEER_SRC); }catch{ $("hErr").textContent = "تحتاج اتصال بالنت عشان تفتح غرفة."; return; }
+  if(peer) try{ peer.destroy(); }catch{}
+  H.code = String(1000 + rand(9000));
+  peer = new Peer(PREFIX + H.code, peerOpts());
+  peer.on("open", () => { H.phase = "lobby"; viewHostLobby(); });
+  peer.on("connection", hostOnConn);
+  peer.on("error", e => {
+    if(e.type === "unavailable-id") return hostCreate();
+    const el = $("hErr"); if(el) el.textContent = "صار خطأ في الاتصال. حدّث الصفحة وجرّب مرة ثانية.";
+  });
+}
+function hostOnConn(c){
+  c.on("data", m => hostOnMsg(c, m));
+  c.on("close", () => {
+    const p = [...H.players.values()].find(p => p.conn === c);
+    if(p){ p.online = false; hostRefresh(); hostMaybeClose(); }
+  });
+}
+function hostQMsg(p){
+  return {t:"q", round:H.round, total:H.rounds, text:H.q, mode:H.mode, ms:Math.max(0, H.endsAt - Date.now()),
+          all:range(H.rounds), chips:p.chips, answer:p.answer, bet:p.bet};
+}
+function hostOnMsg(c, m){
+  if(!m || typeof m !== "object") return;
+  if(m.t === "join"){
+    const pid = String(m.pid || "").slice(0, 24);
+    let name = String(m.name || "").trim().slice(0, 16) || "لاعب";
+    let p = H.players.get(pid);
+    if(!p){
+      if(allPlayers().length >= MAX_PLAYERS){ c.send({t:"full"}); return; }
+      const taken = new Set(allPlayers().map(x => x.name));
+      if(taken.has(name)){ let i = 2; while(taken.has(`${name} ${AR(i)}`)) i++; name = `${name} ${AR(i)}`; }
+      p = {pid, name, score:0, answer:null, bet:null, chips:range(H.rounds), conn:c, online:true};
+      H.players.set(pid, p);
+    }else{ p.conn = c; p.online = true; }
+    hostSend(p, {t:"welcome", name:p.name, score:p.score});
+    if(H.phase === "ask") hostSend(p, hostQMsg(p));
+    else if(H.phase === "review") hostSend(p, {t:"locked", answer:p.answer, bet:p.bet});
+    else if(H.phase === "end") hostSendEnd(p);
+    hostRefresh();
+  }
+  else if(m.t === "answer" && H.phase === "ask"){
+    const p = [...H.players.values()].find(p => p.conn === c);
+    if(!p) return;
+    const text = String(m.text || "").trim().slice(0, 30);
+    const bet = +m.bet;
+    if(!norm(text) || !p.chips.includes(bet)) return;
+    p.answer = text; p.bet = bet;
+    hostSend(p, {t:"got", text, bet});
+    hostRefresh(); hostMaybeClose();
+  }
+}
+function hostRefresh(){
+  if(H.phase === "lobby") renderHostPlayers();
+  if(H.phase === "ask") renderHostAnswered();
+}
+
+/* ===== الغرفة ===== */
+function viewHostLobby(){
+  app.innerHTML = `
+    <div class="lobbyGrid">
+      <div class="card center">
+        <p style="margin:0">ادخلوا من جوالاتكم بهالرمز:</p>
+        <div class="code">${[...H.code].map(d => `<span>${d}</span>`).join("")}</div>
+        <div><div class="qr" id="qr"></div></div>
+        <div class="row">
+          <button class="btn" id="shareBtn">أرسل الرابط</button>
+          <button class="btn alt" id="copyBtn">انسخ الرابط</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="setting"><b>اللاعبين <span id="pc">٠</span></b><span class="muted" style="font-size:.85rem">من ${AR(MIN_PLAYERS)} إلى ${AR(MAX_PLAYERS)}</span></div>
+        <div class="players" id="plist"></div>
+        <div class="setting"><span>الطور</span>
+          <div class="seg" id="segM">
+            <button data-v="majority">🤝 فاهمني</button><button data-v="unique">🦄 ماحد مثلي</button><button data-v="mix">بالتناوب</button>
+          </div></div>
+        <div class="setting"><span>عدد الجولات</span>
+          <div class="seg" id="segR">${[5,8,10].map(n => `<button data-v="${n}">${AR(n)}</button>`).join("")}</div></div>
+        <div class="setting"><span>وقت كل سؤال</span>
+          <div class="seg" id="segS">${[20,30,45].map(n => `<button data-v="${n}">${AR(n)} ث</button>`).join("")}</div></div>
+        <p class="muted" style="font-size:.85rem;margin:4px 0 0" id="betInfo"></p>
+        <label class="switch"><input type="checkbox" id="hostPlays" ${H.hostPlays ? "checked" : ""}> أنا ألعب معهم من هالجهاز</label>
+        <input type="text" id="hostName" maxlength="16" placeholder="اسمك" value="${esc(H.hostName || store.get("lahalak-name", ""))}" ${H.hostPlays ? "" : "hidden"}>
+        <button class="btn gold full" id="startBtn" style="margin-top:16px">ابدأ اللعب</button>
+        <p class="muted center" style="font-size:.85rem;margin:8px 0 0" id="startHint"></p>
+      </div>
+    </div>`;
+  const link = roomLink(H.code);
+  $("shareBtn").onclick = () => navigator.share ? navigator.share({title:"لحالك", text:"تعال العب معنا لحالك 🎮", url:link}).catch(() => {}) : copy(link);
+  $("copyBtn").onclick = () => copy(link);
+  loadScript(QR_SRC).then(() => { const q = $("qr"); if(q) new QRCode(q, {text:link, width:320, height:320, colorDark:"#43121F", colorLight:"#ffffff"}); })
+    .catch(() => { const q = $("qr"); if(q) q.parentElement.hidden = true; });
+  const seg = (id, key, isNum) => {
+    const el = $(id);
+    const paint = () => {
+      el.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", (isNum ? +b.dataset.v : b.dataset.v) === H[key]));
+      $("betInfo").textContent = `كل لاعب معه أرقام رهان من ١ إلى ${AR(H.rounds)}، رقم لكل جولة.`;
+    };
+    el.querySelectorAll("button").forEach(b => b.onclick = () => { H[key] = isNum ? +b.dataset.v : b.dataset.v; paint(); });
+    paint();
+  };
+  seg("segM", "modeSetting", false); seg("segR", "rounds", true); seg("segS", "secs", true);
+  $("hostPlays").onchange = e => { H.hostPlays = e.target.checked; $("hostName").hidden = !H.hostPlays; if(H.hostPlays) $("hostName").focus(); renderHostPlayers(); };
+  $("hostName").oninput = e => { H.hostName = e.target.value.trim().slice(0, 16); renderHostPlayers(); };
+  $("startBtn").onclick = hostStart;
+  renderHostPlayers();
+}
+function renderHostPlayers(){
+  const el = $("plist"); if(!el) return;
+  const list = allPlayers();
+  $("pc").textContent = AR(list.length);
+  el.innerHTML = list.length
+    ? list.map(p => `<span class="chip ${p.online ? "" : "off"} ${p.isHost ? "me" : ""}">${esc(p.name)}</span>`).join("")
+    : `<span class="muted">ننتظر اللاعبين يدخلون…</span>`;
+  const n = list.filter(p => p.online).length;
+  $("startBtn").disabled = n < MIN_PLAYERS;
+  $("startHint").textContent = n < MIN_PLAYERS ? `تحتاجون ${AR(MIN_PLAYERS)} لاعبين على الأقل` : "";
+}
+function hostStart(){
+  if(H.hostPlays){ if(!H.hostName) return toast("اكتب اسمك عشان تلعب"); store.set("lahalak-name", H.hostName); }
+  H.round = 0; H.deck = shuffle([...QUESTIONS]);
+  allPlayers().forEach(p => { p.score = 0; p.chips = range(H.rounds); });
+  hostNextRound();
+}
+
+/* ===== السؤال ===== */
+function hostNextRound(){
+  H.round++;
+  H.mode = roundMode(H.round);
+  H.q = H.deck.pop() || QUESTIONS[rand(QUESTIONS.length)];
+  hostAsk();
+}
+function hostAsk(){
+  allPlayers().forEach(p => { p.answer = null; p.bet = null; });
+  H.phase = "ask";
+  H.endsAt = Date.now() + H.secs * 1000;
+  H.players.forEach(p => hostSend(p, hostQMsg(p)));
+  viewHostAsk();
+  clearInterval(H.tick);
+  H.tick = setInterval(() => {
+    const left = Math.max(0, H.endsAt - Date.now());
+    paintTimer(left, H.secs * 1000);
+    if(left <= 0) hostClose();
+  }, 200);
+}
+function viewHostAsk(){
+  const me = H.hostPlays ? hostSelf() : null;
+  app.innerHTML = `
+    <div class="meta"><span>الجولة ${AR(H.round)} من ${AR(H.rounds)}</span>${modeTag(H.mode)}<div class="timer" id="timer"><b>${AR(H.secs)}</b></div></div>
+    <p class="mtip">${MODES[H.mode].tip}</p>
+    <div class="question">${esc(H.q)}</div>
+    <div class="answered" id="answered"></div>
+    <div class="players" id="alist" style="justify-content:center"></div>
+    ${me ? `
+      <div class="narrow card" style="margin-top:18px">
+        <label class="f" for="hAns" style="margin-top:0">جوابك يا ${esc(me.name)} (غطّ الشاشة 🤫)</label>
+        <input type="text" id="hAns" maxlength="30" placeholder="جوابك" autocomplete="off" value="${esc(me.answer || "")}">
+        <div class="betlabel"><span>راهن برقم</span><small>ينحرق بعد الجولة</small></div>
+        <div class="bets" id="hBets">${betButtons(range(H.rounds), me.chips, me.bet)}</div>
+        <button class="btn full" id="hSend" style="margin-top:12px">احفظ جوابي</button>
+      </div>` : ""}
+    <div class="tools">
+      <button class="btn alt" id="skipQ">🔄 سؤال ثاني</button>
+      <button class="btn alt" id="customQ">✏️ سؤال من عندي</button>
+      <button class="btn gold" id="closeNow">⏱️ خلّص الوقت</button>
+    </div>
+    <div class="custom narrow" id="customBox" hidden>
+      <input type="text" id="customIn" maxlength="60" placeholder="مثلًا: اذكر شي في بيت جدتك">
+      <button class="btn" id="customGo">اعتمد</button>
+    </div>`;
+  $("skipQ").onclick = () => { H.q = H.deck.pop() || QUESTIONS[rand(QUESTIONS.length)]; hostAsk(); };
+  $("customQ").onclick = () => { $("customBox").hidden = false; $("customIn").focus(); };
+  const goCustom = () => { const v = $("customIn").value.trim(); if(v){ H.q = v.slice(0, 60); hostAsk(); } };
+  $("customGo").onclick = goCustom;
+  $("customIn").addEventListener("keydown", e => { if(e.key === "Enter") goCustom(); });
+  $("closeNow").onclick = hostClose;
+  if(me){
+    let pick = me.bet;
+    $("hBets").querySelectorAll(".bet").forEach(b => b.onclick = () => {
+      pick = +b.dataset.bet;
+      $("hBets").querySelectorAll(".bet").forEach(x => x.setAttribute("aria-pressed", +x.dataset.bet === pick));
+    });
+    const save = () => {
+      const v = $("hAns").value.trim().slice(0, 30);
+      if(!norm(v)) return toast("اكتب جوابك");
+      if(!pick) return toast("اختر رقم الرهان");
+      me.answer = v; me.bet = pick; $("hAns").value = ""; $("hAns").placeholder = "انحفظ ✓ (تقدر تغيّره)";
+      toast("انحفظ جوابك"); renderHostAnswered(); hostMaybeClose();
+    };
+    $("hSend").onclick = save;
+    $("hAns").addEventListener("keydown", e => { if(e.key === "Enter") save(); });
+  }
+  paintTimer(H.endsAt - Date.now(), H.secs * 1000);
+  renderHostAnswered();
+}
+function renderHostAnswered(){
+  const el = $("alist"); if(!el) return;
+  const list = allPlayers().filter(p => p.online);
+  const done = list.filter(p => p.answer).length;
+  $("answered").innerHTML = `جاوب <b>${AR(done)}</b> من ${AR(list.length)}`;
+  el.innerHTML = list.map(p => `<span class="chip ${p.answer ? "done" : ""}">${p.answer ? "✓ " : ""}${esc(p.name)}</span>`).join("");
+}
+function hostMaybeClose(){
+  if(H.phase !== "ask") return;
+  const list = allPlayers().filter(p => p.online);
+  if(list.length && list.every(p => p.answer)) setTimeout(() => { if(H.phase === "ask") hostClose(); }, 700);
+}
+
+/* ===== المراجعة ===== */
+function hostClose(){
+  if(H.phase !== "ask") return;
+  clearInterval(H.tick);
+  H.phase = "review"; H.sel = null;
+  // اللي ما اختار رقم: ينحرق أصغر رقم عنده
+  allPlayers().forEach(p => { if(!p.bet && p.chips.length){ p.bet = Math.min(...p.chips); p.autoBet = true; } else p.autoBet = false; });
+  H.players.forEach(p => hostSend(p, {t:"locked", answer:p.answer, bet:p.bet, auto:p.autoBet}));
+  const map = new Map();
+  allPlayers().forEach(p => {
+    if(!p.answer) return;
+    const k = norm(p.answer);
+    if(!map.has(k)) map.set(k, {texts:[], pids:[], rej:false});
+    const g = map.get(k);
+    if(!g.texts.includes(p.answer)) g.texts.push(p.answer);
+    g.pids.push(p.pid);
+  });
+  H.groups = [...map.values()];
+  H.autoGroups = H.groups.map(g => ({texts:[...g.texts], pids:[...g.pids], rej:false}));
+  viewHostReview();
+}
+function viewHostReview(){
+  const wins = winningGroups(H.groups, H.mode);
+  const gs = H.groups.map((g, i) => ({g, i})).sort((a, b) => b.g.pids.length - a.g.pids.length);
+  const missing = allPlayers().filter(p => !p.answer).map(p => p.name);
+  const winners = [...wins].reduce((n, g) => n + g.pids.length, 0);
+  app.innerHTML = `
+    <div class="meta"><span>الجولة ${AR(H.round)} من ${AR(H.rounds)}</span>${modeTag(H.mode)}<span>${AR(winners)} فايزين</span></div>
+    <div class="question" style="font-size:clamp(1.4rem,4.5vw,2.4rem);margin:8px 0 16px">${esc(H.q)}</div>
+    <p class="hint">اضغط على جوابين بنفس المعنى عشان تدمجهم، واضغط ✕ على الجواب اللي ما ينطبق على السؤال.</p>
+    <div class="groups">
+      ${gs.length ? gs.map(({g, i}) => {
+        const win = wins.has(g);
+        const badge = g.rej ? "مرفوض" : win ? MODES[H.mode].win : (g.pids.length === 1 ? "لحاله" : `${AR(g.pids.length)} قالوها`);
+        return `<button class="group ${win ? "win" : ""} ${g.rej ? "rej" : ""} ${H.sel === i ? "sel" : ""}" data-i="${i}">
+          <span class="ans">${esc(g.texts[0])}</span>
+          ${g.texts.length > 1 ? `<span class="alts">${g.texts.slice(1).map(esc).join("، ")}</span>` : ""}
+          <span class="names">${g.pids.map(pid => esc(byPid(pid)?.name || "")).join("، ")}</span>
+          <span class="badge">${badge}</span>
+          <span class="x" data-x="${i}" role="button" aria-label="ما ينطبق">✕</span>
+        </button>`;
+      }).join("") : `<p class="muted">محد جاوب 😶</p>`}
+    </div>
+    ${missing.length ? `<p class="noans">ما جاوبوا: ${missing.map(esc).join("، ")}</p>` : ""}
+    ${H.mode === "majority" && !wins.size && gs.length ? `<p class="noans">ما فيه جواب تكرر، فمحد ياخذ نقاط هالجولة</p>` : ""}
+    <div class="tools">
+      <button class="btn alt" id="resetG">↩️ رجّع الدمج</button>
+      <button class="btn gold" id="finish">اكشف النتيجة</button>
+    </div>`;
+  document.querySelectorAll(".group").forEach(b => b.onclick = e => {
+    const i = +b.dataset.i;
+    if(e.target.closest("[data-x]")){ H.groups[i].rej = !H.groups[i].rej; H.sel = null; return viewHostReview(); }
+    if(H.sel === null){ H.sel = i; return viewHostReview(); }
+    if(H.sel === i){ H.sel = null; return viewHostReview(); }
+    const a = H.groups[H.sel], c = H.groups[i];
+    a.texts.push(...c.texts.filter(t => !a.texts.includes(t))); a.pids.push(...c.pids); a.rej = a.rej && c.rej;
+    H.groups.splice(i, 1); H.sel = null; toast("ندمجوا");
+    viewHostReview();
+  });
+  $("resetG").onclick = () => { H.groups = H.autoGroups.map(g => ({texts:[...g.texts], pids:[...g.pids], rej:false})); H.sel = null; viewHostReview(); };
+  $("finish").onclick = hostFinishRound;
+}
+const rankOf = (list, p) => 1 + list.filter(x => x.score > p.score).length;
+function hostFinishRound(){
+  H.phase = "scores";
+  const wins = winningGroups(H.groups, H.mode);
+  const winPids = new Set([...wins].flatMap(g => g.pids));
+  const list = allPlayers();
+  H.last = {};
+  list.forEach(p => {
+    const won = winPids.has(p.pid);
+    const pts = won ? (p.bet || 0) : 0;
+    p.score += pts;
+    if(p.bet) p.chips = p.chips.filter(n => n !== p.bet);
+    const g = H.groups.find(g => g.pids.includes(p.pid));
+    H.last[p.pid] = {won, pts, bet:p.bet, auto:p.autoBet, rej:!!(g && g.rej), same:g ? g.pids.length - 1 : 0, answer:p.answer};
+  });
+  const reveal = H.groups.map(g => ({
+    text:g.texts[0], alts:g.texts.slice(1), names:g.pids.map(pid => byPid(pid)?.name || ""), pids:g.pids,
+    win:wins.has(g), rej:g.rej
+  })).sort((a, b) => b.pids.length - a.pids.length);
+  list.forEach(p => {
+    if(p.isHost) return;
+    hostSend(p, {t:"result", mode:H.mode, ...H.last[p.pid], score:p.score, rank:rankOf(list, p), of:list.length,
+      last:H.round >= H.rounds, all:range(H.rounds), chips:p.chips,
+      groups:reveal.map(g => ({text:g.text, alts:g.alts, names:g.names, win:g.win, rej:g.rej, me:g.pids.includes(p.pid)}))});
+  });
+  viewHostScores();
+}
+function scoreList(list, withRound){
+  const sorted = [...list].sort((a, b) => b.score - a.score);
+  return `<ol class="board">${sorted.map(p => {
+    const r = rankOf(sorted, p), l = withRound && H.last[p.pid];
+    const bt = !l || !l.bet ? "" : l.won ? `<span class="bt ok">راهن ${AR(l.bet)} ✓ +${AR(l.pts)}</span>` : `<span class="bt">راهن ${AR(l.bet)} 🔥</span>`;
+    return `<li class="${r === 1 && p.score > 0 ? "top" : ""}"><span class="rk">${AR(r)}</span><span class="nm">${esc(p.name)}</span>${bt}<span class="sc">${AR(p.score)}</span></li>`;
+  }).join("")}</ol>`;
+}
+function viewHostScores(){
+  const last = H.round >= H.rounds;
+  const next = last ? "" : MODES[roundMode(H.round + 1)];
+  app.innerHTML = `
+    <div class="h2">الترتيب بعد الجولة ${AR(H.round)}</div>
+    ${scoreList(allPlayers(), true)}
+    <div class="tools"><button class="btn gold" id="nextBtn">${last ? "🏆 النتيجة النهائية" : `الجولة الجاية: ${next.emo} ${next.name}`}</button></div>`;
+  $("nextBtn").onclick = () => last ? hostEnd() : hostNextRound();
+}
+function hostSendEnd(p){
+  const list = allPlayers(), sorted = [...list].sort((a, b) => b.score - a.score);
+  const top = sorted.filter(x => x.score === sorted[0].score).map(x => x.name);
+  hostSend(p, {t:"end", rank:rankOf(list, p), of:list.length, score:p.score, winners:top});
+}
+function hostEnd(){
+  H.phase = "end";
+  H.players.forEach(hostSendEnd);
+  const sorted = allPlayers().sort((a, b) => b.score - a.score);
+  const winners = sorted.filter(p => p.score === sorted[0].score);
+  app.innerHTML = `
+    <div class="podium">
+      <div class="crown">👑</div>
+      <span class="muted">${winners.length > 1 ? "تعادل بين" : "الفايز"}</span>
+      <b>${winners.map(p => esc(p.name)).join(" و ")}</b>
+      <span class="muted">${AR(sorted[0].score)} ${sorted[0].score === 1 ? "نقطة" : "نقاط"}</span>
+    </div>
+    ${scoreList(sorted, false)}
+    <div class="tools">
+      <button class="btn gold" id="againBtn">جولة جديدة بنفس اللاعبين</button>
+      <button class="btn alt" id="lobbyBtn">إعدادات الغرفة</button>
+    </div>`;
+  $("againBtn").onclick = hostStart;
+  $("lobbyBtn").onclick = () => { H.phase = "lobby"; hostBroadcast({t:"welcome-back"}); viewHostLobby(); };
+}
+
+/* ======================================================
+   اللاعب
+   ====================================================== */
+const P = {conn:null, code:"", name:"", pid:"", tick:null, sent:null, bet:null, q:null};
+function pidGet(){
+  let id = store.get("lahalak-pid", "");
+  if(!id){ id = Math.random().toString(36).slice(2, 12); store.set("lahalak-pid", id); }
+  return id;
+}
+async function playerJoin(code, name){
+  code = String(code).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/\D/g, "");
+  name = String(name).trim().slice(0, 16);
+  if(!name) return viewHome(code, "اكتب اسمك أول");
+  if(code.length !== 4) return viewHome(code, "رمز الغرفة ٤ أرقام");
+  store.set("lahalak-name", name);
+  P.code = code; P.name = name; P.pid = pidGet();
+  viewPlayerMsg("⏳", "جاري الدخول للغرفة…", "", true);
+  try{ await loadScript(PEER_SRC); }catch{ return viewHome(code, "تحتاج اتصال بالنت عشان تلعب."); }
+  if(peer) try{ peer.destroy(); }catch{}
+  peer = new Peer(undefined, peerOpts());
+  let opened = false;
+  const fail = msg => { if(!opened) viewHome(code, msg); };
+  const timer = setTimeout(() => fail("ما قدرنا نوصل للغرفة. تأكد إن المضيف فاتح الصفحة."), 15000);
+  peer.on("open", () => {
+    const c = peer.connect(PREFIX + code, {reliable:true});
+    P.conn = c;
+    c.on("open", () => { opened = true; clearTimeout(timer); c.send({t:"join", pid:P.pid, name:P.name}); });
+    c.on("data", playerOnMsg);
+    c.on("close", () => { if(opened) viewPlayerLost(); });
+  });
+  peer.on("error", e => {
+    if(e.type === "peer-unavailable") fail("ما لقينا الغرفة. تأكد من الرمز.");
+    else fail("صار خطأ في الاتصال. جرّب مرة ثانية.");
+  });
+}
+function pSend(m){ if(P.conn && P.conn.open) P.conn.send(m); }
+function playerOnMsg(m){
+  if(!m || typeof m !== "object") return;
+  switch(m.t){
+    case "welcome":
+      P.name = m.name;
+      viewPlayerMsg("👋", `أهلًا ${m.name}!`, "دخلت الغرفة. انتظر المضيف يبدأ اللعب.", true); break;
+    case "welcome-back":
+      viewPlayerMsg("👋", "رجعنا للغرفة", "انتظر المضيف يبدأ جولة جديدة.", true); break;
+    case "q":
+      P.q = m; P.sent = m.answer || null; P.bet = m.bet || null;
+      P.q.endsAt = Date.now() + m.ms;
+      viewPlayerAsk(); break;
+    case "got":
+      P.sent = m.text; P.bet = m.bet; viewPlayerSent(); break;
+    case "locked":
+      clearInterval(P.tick);
+      viewPlayerMsg("⏱️", "خلص الوقت!",
+        m.answer ? `جوابك «${m.answer}» وراهنت بـ ${AR(m.bet)}. انتظر الأجوبة تنكشف…`
+                 : `ما لحقت تجاوب${m.bet ? `، وانحرق رقم ${AR(m.bet)}` : ""}. انتظر الأجوبة تنكشف…`, true); break;
+    case "result": viewPlayerResult(m); break;
+    case "end": viewPlayerEnd(m); break;
+    case "full": viewHome(P.code, "الغرفة مليانة."); break;
+  }
+}
+function viewPlayerMsg(emo, title, text, spin){
+  clearInterval(P.tick);
+  app.innerHTML = `<section class="narrow result">
+    <div class="emo">${emo}</div><h2>${esc(title)}</h2><p class="muted">${esc(text)}</p>
+    ${spin ? `<div class="wait"><span class="spin"></span></div>` : ""}
+  </section>`;
+}
+function viewPlayerAsk(){
+  const m = P.q;
+  app.innerHTML = `<section class="narrow">
+    <div class="meta"><span>الجولة ${AR(m.round)} من ${AR(m.total)}</span>${modeTag(m.mode)}<div class="timer" id="timer"><b></b></div></div>
+    <p class="mtip">${MODES[m.mode].tip}</p>
+    <div class="pq">${esc(m.text)}</div>
+    <div id="askBox">
+      <input type="text" id="ans" maxlength="30" placeholder="جوابك" autocomplete="off" enterkeyhint="done">
+      <div class="betlabel"><span>راهن برقم</span><small>ينحرق سواء فزت أو خسرت</small></div>
+      <div class="bets" id="bets">${betButtons(m.all, m.chips, P.bet)}</div>
+      <button class="btn gold full" id="sendBtn" style="margin-top:14px">أرسل</button>
+    </div>
+    <div id="sentBox"></div>
+  </section>`;
+  const total = Math.max(m.ms, 1);
+  clearInterval(P.tick);
+  const tickFn = () => paintTimer(Math.max(0, m.endsAt - Date.now()), total);
+  P.tick = setInterval(tickFn, 200); tickFn();
+  let pick = P.bet;
+  $("bets").querySelectorAll(".bet").forEach(b => b.onclick = () => {
+    pick = +b.dataset.bet;
+    $("bets").querySelectorAll(".bet").forEach(x => x.setAttribute("aria-pressed", +x.dataset.bet === pick));
+  });
+  const send = () => {
+    const v = $("ans").value.trim();
+    if(!norm(v)) return toast("اكتب جوابك");
+    if(!pick) return toast("اختر رقم الرهان");
+    pSend({t:"answer", text:v.slice(0, 30), bet:pick});
+  };
+  $("sendBtn").onclick = send;
+  $("ans").addEventListener("keydown", e => { if(e.key === "Enter") $("ans").blur(); });
+  if(P.sent) viewPlayerSent(); else $("ans").focus();
+}
+function viewPlayerSent(){
+  const ask = $("askBox"), box = $("sentBox"); if(!ask || !box) return;
+  ask.hidden = true;
+  box.innerHTML = `<div class="sent">
+    <div class="big">✅</div><div>وصل جوابك</div>
+    <div class="mine">${esc(P.sent)}<small>راهنت بـ ${AR(P.bet)}</small></div>
+    <div><button class="btn alt" id="editBtn">غيّر</button></div></div>`;
+  $("editBtn").onclick = () => { ask.hidden = false; box.innerHTML = ""; $("ans").value = P.sent; $("ans").focus(); };
+}
+function viewPlayerResult(m){
+  clearInterval(P.tick);
+  let emo, title, text;
+  if(!m.answer){ emo = "😶"; title = "ما جاوبت"; text = m.bet ? `وانحرق رقم ${AR(m.bet)}` : ""; }
+  else if(m.rej){ emo = "🙅"; title = "جوابك ما ينطبق"; text = `المضيف شطب «${m.answer}»، وانحرق رقم ${AR(m.bet)} 🔥`; }
+  else if(m.won){
+    emo = m.mode === "majority" ? "🤝" : "🦄";
+    title = m.pts === 1 ? "+١ نقطة!" : `+${AR(m.pts)} نقاط!`;
+    text = m.mode === "majority" ? `فاهمينك! ${m.same === 1 ? "واحد" : AR(m.same)} كتبوا «${m.answer}» معك` : `محد كتب «${m.answer}» غيرك`;
+  }else{
+    emo = "🔥"; title = `انحرق رقم ${AR(m.bet)}`;
+    text = m.mode === "majority"
+      ? (m.same ? `${m.same === 1 ? "واحد بس كتب" : AR(m.same) + " كتبوا"} «${m.answer}» معك، بس مو الأغلبية` : `محد فهمك! كتبت «${m.answer}» لحالك`)
+      : (m.same === 1 ? `واحد غيرك كتب «${m.answer}» بعد` : `${AR(m.same)} غيرك كتبوا «${m.answer}» بعد`);
+  }
+  app.innerHTML = `<section class="narrow result">
+    <div class="emo">${emo}</div><h2>${esc(title)}</h2><p>${esc(text)}</p>
+    <div class="stat"><div><b>${AR(m.score)}</b><span>نقاطك</span></div><div><b>${AR(m.rank)}</b><span>ترتيبك من ${AR(m.of)}</span></div></div>
+    ${m.last ? "" : `<div class="muted" style="font-size:.85rem">أرقامك الباقية</div><div class="chipsLeft">${m.all.map(n => `<span class="${m.chips.includes(n) ? "" : "burnt"}">${AR(n)}</span>`).join("")}</div>`}
+    <ul class="reveal">${m.groups.map(g => `<li class="${g.win ? "win" : ""} ${g.rej ? "rej" : ""} ${g.me ? "me" : ""}">
+      <span class="n">${g.win ? "⭐ " : ""}${AR(g.names.length)}</span><b>${esc(g.text)}</b>${g.alts.length ? ` <span class="muted">(${g.alts.map(esc).join("، ")})</span>` : ""}
+      <small>${g.names.map(esc).join("، ")}</small></li>`).join("")}</ul>
+    <div class="wait"><span class="spin"></span><span class="muted">${m.last ? "ننتظر النتيجة النهائية…" : "ننتظر الجولة الجاية…"}</span></div>
+  </section>`;
+}
+function viewPlayerEnd(m){
+  clearInterval(P.tick);
+  const won = m.rank === 1;
+  app.innerHTML = `<section class="narrow result">
+    <div class="emo">${won ? "👑" : "🎉"}</div>
+    <h2>${won ? (m.winners.length > 1 ? "تعادلت على المركز الأول!" : "فزت!") : `مركزك ${AR(m.rank)} من ${AR(m.of)}`}</h2>
+    <p>${won ? "" : `الفايز: ${m.winners.map(esc).join(" و ")}`}</p>
+    <div class="stat"><div><b>${AR(m.score)}</b><span>نقاطك</span></div></div>
+    <p class="muted">خلك في الصفحة لو بتلعبون جولة ثانية</p>
+  </section>`;
+}
+function viewPlayerLost(){
+  clearInterval(P.tick);
+  app.innerHTML = `<section class="narrow result">
+    <div class="emo">📡</div><h2>انقطع الاتصال</h2>
+    <p class="muted">يمكن الشاشة انطفت أو النت فصل. ارجع ادخل وتنحفظ نقاطك وأرقامك.</p>
+    <button class="btn gold full" id="rejoin" style="margin-top:16px">ارجع للغرفة</button>
+  </section>`;
+  $("rejoin").onclick = () => playerJoin(P.code, P.name);
+}
+
+/* ======================================================
+   تشغيل
+   ====================================================== */
+$("rulesBtn").onclick = () => $("rulesModal").classList.add("open");
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => $("rulesModal").classList.remove("open"));
+$("rulesModal").addEventListener("click", e => { if(e.target.id === "rulesModal") e.target.classList.remove("open"); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") $("rulesModal").classList.remove("open"); });
+window.addEventListener("pagehide", () => { try{ P.conn && P.conn.close(); }catch{} });
+window.addEventListener("beforeunload", e => { if(H.players.size && H.phase !== "lobby"){ e.preventDefault(); e.returnValue = ""; } });
+
+const roomParam = new URLSearchParams(location.search).get("room");
+if(roomParam){
+  const u = new URL(location.href); u.searchParams.delete("room"); history.replaceState(null, "", u);
+  viewHome(roomParam);
+}else viewHome();
+
+if("serviceWorker" in navigator) navigator.serviceWorker.register("../sw.js").catch(() => {});
+</script>
+</body>
+</html>
